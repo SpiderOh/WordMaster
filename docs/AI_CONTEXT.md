@@ -6,9 +6,9 @@
 
 ## 当前状态
 
-- 当前阶段：骨架
-- 最近完成：Task 1 建立 FastAPI 后端、React/Vite 前端、PWA 占位、Docker Compose 和健康检查
-- 当前任务：执行实施计划 Task 2
+- 当前阶段：导入
+- 最近完成：Task 2 建立数据库初始迁移、CSV 导入服务和词库管理 API
+- 当前任务：执行实施计划 Task 3
 - 阻塞问题：无
 - 最后更新：2026-09-04
 
@@ -32,11 +32,19 @@
 - 测试命令：`cd backend && python -m pytest tests/test_health.py -q`；`cd frontend && npm run build`
 - Docker 启动：`docker compose up --build`，当前机器未检测到 Docker CLI
 - 本地地址：后端 `http://127.0.0.1:8000`；前端 `http://127.0.0.1:5173`
-- 数据库迁移版本：未实现
+- 数据库迁移版本：`202609040001_initial_vocabulary`
 
 ## 已实现接口与页面
 
 - `GET /api/v1/health`：返回 `{ "status": "ok", "version": string }`，测试位置 `backend/tests/test_health.py`。
+- `POST /api/v1/vocabularies/import`：multipart CSV 导入，返回词库摘要、有效行数和行级错误，测试位置 `backend/tests/test_vocabulary_import.py`。
+- `GET /api/v1/vocabularies`、`GET /api/v1/vocabularies/{id}`、`PATCH /api/v1/vocabularies/{id}`、`PATCH /api/v1/vocabularies/{id}/active`、`PATCH /api/v1/vocabularies/{id}/priority`、`DELETE /api/v1/vocabularies/{id}`：词库管理接口，测试位置 `backend/tests/test_vocabulary_import.py`。
+
+## 数据模型变更
+
+- 新增 `users`、`vocabularies`、`words`、`word_progress`、`operation_logs`。
+- `words.vocabulary_id + words.normalized_word` 保证同一词库内规范化英文唯一。
+- `word_progress.user_id + word_progress.word_id` 保证用户单词进度唯一。
 
 ## 最近测试结果
 
@@ -44,10 +52,14 @@
 
 2026-09-04：Task 1 绿灯测试 `cd backend && python -m pytest tests/test_health.py -q` 结果 1 passed；`cd frontend && npm run build` 结果 Vite production build 成功。
 
+2026-09-04：Task 2 红灯测试 `cd backend && python -m pytest tests/test_vocabulary_import.py -q` 首次失败于 `ModuleNotFoundError: No module named 'app.db'`；补审计日志测试后失败于 `ImportError: cannot import name 'OperationLog'`。
+
+2026-09-04：Task 2 绿灯测试 `cd backend && python -m pytest tests/test_vocabulary_import.py -q` 结果 7 passed；`cd backend && python -m pytest -q` 结果 8 passed；`cd backend && alembic upgrade head` 成功升级到 `202609040001`。
+
 ## 下一步建议
 
-1. 执行 Task 2，完成数据库迁移和 CSV 导入，验证 `backend/tests/test_vocabulary_import.py`。
-2. 执行 Task 3，完成学习页、快照、熟词替换和完成页事件。
+1. 执行 Task 3，完成学习页、快照、熟词替换和完成页事件，验证 `backend/tests/test_study_pages.py`。
+2. 执行 Task 4，完成日期历史和推荐日期，验证 `backend/tests/test_history_and_schedule.py`。
 3. 每个任务完成后更新本文件和 `CHANGELOG.md`。
 
 ## AI 修改协议

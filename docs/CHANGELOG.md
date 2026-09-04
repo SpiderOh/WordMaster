@@ -12,3 +12,5 @@
 - 建立 FastAPI 后端骨架，新增 `/api/v1/health` 健康检查。
 - 建立 React/Vite 前端骨架，加入移动端底部导航和 PWA manifest/service worker 占位。
 - 新增 Docker Compose、前后端 Dockerfile、环境变量示例和文档入口。
+- 建立 SQLite/Alembic 初始迁移，新增词库、单词、进度和操作日志模型。
+- 实现 CSV 词库导入、行级错误报告、规范化重复词跳过和词库管理 API。
