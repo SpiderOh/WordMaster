@@ -136,7 +136,10 @@ class StudyPageService:
                 )
             )
         self.db.flush()
-        page.is_short = len(self._active_links(page.id)) < page.page_size
+        active_count = len(self._active_links(page.id))
+        page.is_short = active_count < page.page_size
+        if active_count == 0:
+            page.status = "exhausted"
         log_operation(
             self.db,
             user_id=user_id,
@@ -262,6 +265,8 @@ class StudyPageService:
             raise ValueError("Only the latest completion can be undone")
 
         undone_at = now or datetime.now(timezone.utc)
+        if undone_at < session.completed_at:
+            raise ValueError("Undo timestamp cannot be before completion")
         if undone_at - session.completed_at > timedelta(seconds=self.undo_window_seconds):
             raise ValueError("Completion undo window has expired")
         remaining_sessions = list(

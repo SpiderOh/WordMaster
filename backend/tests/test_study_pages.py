@@ -170,6 +170,20 @@ def test_replace_mastered_word_marks_page_short_when_no_replacement_exists(db_se
     assert updated.is_short is True
 
 
+def test_mastering_the_last_word_exhausts_the_page_instead_of_reusing_an_empty_page(db_session):
+    import_words(db_session, "Deck", ["alpha"])
+    service = StudyPageService(db_session)
+    page = service.get_or_create_next_page(user_id=1, page_size=1)
+    word = active_words(db_session, page)[0]
+
+    updated = service.replace_mastered_word(page_id=page.id, word_id=word.id)
+
+    assert updated.status == "exhausted"
+    assert active_words(db_session, updated) == []
+    with pytest.raises(NoEligibleWordsError):
+        service.get_or_create_next_page(user_id=1, page_size=1)
+
+
 def test_replace_mastered_word_rolls_back_all_changes_on_failure(db_session, monkeypatch):
     import_words(db_session, "Deck", ["alpha", "beta", "gamma"])
     service = StudyPageService(db_session)
@@ -282,6 +296,17 @@ def test_undo_completion_rejects_a_session_outside_the_short_window(db_session):
     assert event_types == ["study_completed"]
 
 
+def test_undo_completion_rejects_a_timestamp_before_completion(db_session):
+    import_words(db_session, "Deck", ["alpha"])
+    service = StudyPageService(db_session)
+    page = service.get_or_create_next_page(user_id=1, page_size=1)
+    completed_at = datetime(2026, 9, 4, 8, tzinfo=timezone.utc)
+    session = service.complete_page(page_id=page.id, completed_at=completed_at)
+
+    with pytest.raises(ValueError, match="before completion"):
+        service.undo_completion(session_id=session.id, now=completed_at - timedelta(seconds=1))
+
+
 def test_undo_latest_completion_restores_previous_session_state(db_session):
     import_words(db_session, "Deck", ["alpha", "beta"])
     service = StudyPageService(db_session)
@@ -355,10 +380,7 @@ def test_study_page_api_next_detail_complete_and_undo(client, db_session):
     assert detail_response.status_code == 200
     assert detail_response.json()["page_size"] == 2
 
-    complete_response = client.post(
-        f"/api/v1/study-pages/{page_id}/complete",
-        json={"completed_at": "2026-09-04T08:30:00+00:00"},
-    )
+    complete_response = client.post(f"/api/v1/study-pages/{page_id}/complete", json={})
     assert complete_response.status_code == 201
     session_id = complete_response.json()["id"]
     assert len(complete_response.json()["snapshot"]["words"]) == 2
@@ -380,3 +402,12 @@ def test_study_page_api_returns_not_found_for_missing_resources(client):
     assert next_response.json()["detail"] == "No eligible words available"
     assert complete_response.status_code == 404
     assert master_response.status_code == 404
+
+
+def test_study_page_openapi_declares_business_error_responses(client):
+    paths = client.get("/openapi.json").json()["paths"]
+
+    assert "404" in paths["/api/v1/study-pages/next"]["get"]["responses"]
+    undo_responses = paths["/api/v1/study-pages/{page_id}/undo-complete"]["post"]["responses"]
+    assert "400" in undo_responses
+    assert "404" in undo_responses

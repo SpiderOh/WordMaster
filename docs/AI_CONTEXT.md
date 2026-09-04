@@ -44,7 +44,7 @@
 - `POST /api/v1/study-pages/{id}/words/{word_id}/master`：首次学习标记熟并补词，测试位置 `backend/tests/test_study_pages.py`。
 - `POST /api/v1/study-pages/{id}/complete`：完成页面并写入快照和学习事件，测试位置 `backend/tests/test_study_pages.py`。
 - `POST /api/v1/study-pages/{id}/undo-complete`：撤销完成页增量并追加撤销事件，测试位置 `backend/tests/test_study_pages.py`。
-- 学习页无候选词时返回 404 且不落空页；熟词替换、完成与撤销均在异常时回滚。
+- 学习页无候选词时返回 404 且不落空页；最后一个词标熟后页面转为 `exhausted`；熟词替换、完成与撤销均在异常时回滚。
 
 ## 数据模型变更
 
@@ -71,7 +71,7 @@
 
 2026-09-04：Task 3 红灯测试 `cd backend && python -m pytest tests/test_study_pages.py -q` 首次失败于 `ImportError: cannot import name 'StudyPage'`；补熟词替换 API 测试后失败于 `404 == 200`；实现后 `cd backend && python -m pytest tests/test_study_pages.py -q` 结果 8 passed；`cd backend && python -m pytest -q` 结果 16 passed；`cd backend && alembic upgrade head` 成功升级到 `202609040002`。
 
-2026-09-04：Task 3 评审修复分别以失败测试复现空页持久化、短页标记陈旧、旧会话可撤销、超时可撤销、状态时间未恢复及三类事务未回滚；修复后 `cd backend && python -m pytest tests/test_study_pages.py -q` 结果 18 passed。
+2026-09-04：Task 3 评审修复分别以失败测试复现空页持久化、短页标记陈旧、旧会话可撤销、超时可撤销、状态时间未恢复及三类事务未回滚；二次复查补全全熟空页、未来完成时间和 OpenAPI 错误响应，最终 `cd backend && python -m pytest tests/test_study_pages.py -q` 结果 21 passed。
 
 ## 下一步建议
 

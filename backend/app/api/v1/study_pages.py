@@ -18,7 +18,11 @@ from app.services.study_page_service import NoEligibleWordsError, StudyPageNotFo
 router = APIRouter(tags=["study-pages"])
 
 
-@router.get("/next", response_model=StudyPageRead)
+@router.get(
+    "/next",
+    response_model=StudyPageRead,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "No eligible words available"}},
+)
 def get_next_page(
     page_size: int = Query(default=15, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -45,7 +49,14 @@ def get_page(
     return service.to_read(page)
 
 
-@router.post("/{page_id}/words/{word_id}/master", response_model=StudyPageRead)
+@router.post(
+    "/{page_id}/words/{word_id}/master",
+    response_model=StudyPageRead,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Word cannot be marked mastered"},
+        status.HTTP_404_NOT_FOUND: {"description": "Study page or word progress not found"},
+    },
+)
 def mark_word_mastered(
     page_id: int,
     word_id: int,
@@ -62,7 +73,15 @@ def mark_word_mastered(
     return service.to_read(page)
 
 
-@router.post("/{page_id}/complete", response_model=StudySessionRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{page_id}/complete",
+    response_model=StudySessionRead,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Study page cannot be completed"},
+        status.HTTP_404_NOT_FOUND: {"description": "Study page not found"},
+    },
+)
 def complete_page(
     page_id: int,
     payload: CompletePageRequest,
@@ -80,7 +99,14 @@ def complete_page(
     return StudySessionRead.model_validate(session)
 
 
-@router.post("/{page_id}/undo-complete", response_model=UndoCompletionResponse)
+@router.post(
+    "/{page_id}/undo-complete",
+    response_model=UndoCompletionResponse,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Completion cannot be undone"},
+        status.HTTP_404_NOT_FOUND: {"description": "Study session not found"},
+    },
+)
 def undo_complete(
     page_id: int,
     payload: UndoCompletionRequest,
