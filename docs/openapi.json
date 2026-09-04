@@ -5,6 +5,74 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/backup/json": {
+      "get": {
+        "tags": [
+          "backup"
+        ],
+        "summary": "Export Json Backup",
+        "operationId": "export_json_backup_api_v1_backup_json_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Export Json Backup Api V1 Backup Json Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "backup"
+        ],
+        "summary": "Import Json Backup",
+        "operationId": "import_json_backup_api_v1_backup_json_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Import Json Backup Api V1 Backup Json Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -456,6 +524,170 @@
         }
       }
     },
+    "/api/v1/settings": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Get Settings",
+        "operationId": "get_settings_api_v1_settings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Update Settings",
+        "operationId": "update_settings_api_v1_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/today": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Today Stats",
+        "operationId": "get_today_stats_api_v1_stats_today_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayStatsRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/today/repeated-forgetting": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Repeated Forgetting Words",
+        "operationId": "get_repeated_forgetting_words_api_v1_stats_today_repeated_forgetting_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RepeatedForgettingWordRead"
+                  },
+                  "title": "Response Get Repeated Forgetting Words Api V1 Stats Today Repeated Forgetting Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/vocabularies/import": {
       "post": {
         "tags": [
@@ -642,6 +874,46 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vocabularies/{vocabulary_id}/export": {
+      "get": {
+        "tags": [
+          "vocabularies"
+        ],
+        "summary": "Export Vocabulary",
+        "operationId": "export_vocabulary_api_v1_vocabularies__vocabulary_id__export_get",
+        "parameters": [
+          {
+            "name": "vocabulary_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Vocabulary Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -1469,6 +1741,34 @@
         ],
         "title": "ImportResponse"
       },
+      "RepeatedForgettingWordRead": {
+        "properties": {
+          "word_id": {
+            "type": "integer",
+            "title": "Word Id"
+          },
+          "word": {
+            "type": "string",
+            "title": "Word"
+          },
+          "forget_count_today": {
+            "type": "integer",
+            "title": "Forget Count Today"
+          },
+          "total_forget_count": {
+            "type": "integer",
+            "title": "Total Forget Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "word_id",
+          "word",
+          "forget_count_today",
+          "total_forget_count"
+        ],
+        "title": "RepeatedForgettingWordRead"
+      },
       "RowErrorRead": {
         "properties": {
           "row_number": {
@@ -1491,6 +1791,108 @@
           "message"
         ],
         "title": "RowErrorRead"
+      },
+      "SettingsRead": {
+        "properties": {
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "intervals": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Intervals"
+          },
+          "theme": {
+            "type": "string",
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ],
+            "title": "Theme"
+          },
+          "font_size": {
+            "type": "string",
+            "enum": [
+              "small",
+              "medium",
+              "large"
+            ],
+            "title": "Font Size"
+          },
+          "vocabulary_priorities": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Vocabulary Priorities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page_size",
+          "intervals",
+          "theme",
+          "font_size"
+        ],
+        "title": "SettingsRead"
+      },
+      "SettingsUpdate": {
+        "properties": {
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "intervals": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Intervals"
+          },
+          "theme": {
+            "type": "string",
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ],
+            "title": "Theme"
+          },
+          "font_size": {
+            "type": "string",
+            "enum": [
+              "small",
+              "medium",
+              "large"
+            ],
+            "title": "Font Size"
+          },
+          "vocabulary_priorities": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Vocabulary Priorities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page_size",
+          "intervals",
+          "theme",
+          "font_size"
+        ],
+        "title": "SettingsUpdate"
       },
       "StudyPageRead": {
         "properties": {
@@ -1637,6 +2039,68 @@
           "snapshot"
         ],
         "title": "StudySessionRead"
+      },
+      "TodayStatsRead": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "study_word_count": {
+            "type": "integer",
+            "title": "Study Word Count"
+          },
+          "forgetting_count": {
+            "type": "integer",
+            "title": "Forgetting Count"
+          },
+          "repeated_forgetting_count": {
+            "type": "integer",
+            "title": "Repeated Forgetting Count"
+          },
+          "streak_days": {
+            "type": "integer",
+            "title": "Streak Days"
+          },
+          "total_study_count": {
+            "type": "integer",
+            "title": "Total Study Count"
+          },
+          "learning_word_count": {
+            "type": "integer",
+            "title": "Learning Word Count"
+          },
+          "mastered_word_count": {
+            "type": "integer",
+            "title": "Mastered Word Count"
+          },
+          "forgotten_word_count": {
+            "type": "integer",
+            "title": "Forgotten Word Count"
+          },
+          "repeated_forgetting_words": {
+            "items": {
+              "$ref": "#/components/schemas/RepeatedForgettingWordRead"
+            },
+            "type": "array",
+            "title": "Repeated Forgetting Words"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "study_word_count",
+          "forgetting_count",
+          "repeated_forgetting_count",
+          "streak_days",
+          "total_study_count",
+          "learning_word_count",
+          "mastered_word_count",
+          "forgotten_word_count",
+          "repeated_forgetting_words"
+        ],
+        "title": "TodayStatsRead"
       },
       "UndoCompletionRequest": {
         "properties": {

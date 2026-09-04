@@ -125,3 +125,23 @@ API 前缀为 `/api/v1`，使用 FastAPI 自动生成 OpenAPI。目标模块包�
 ### `POST /api/v1/forgotten-words/special-page`
 
 从所选遗忘词创建专攻页。`POST /api/v1/forgotten-words/special-pages/{page_id}/complete` 逐词接收 `remembered`、`forgotten` 或 `mastered` 结果。
+
+### `GET /api/v1/stats/today`
+
+返回指定 `date`（默认今天）的学习单词数、遗忘事件数、再次遗忘单词数、连续学习天数、累计学习次数及各状态数量。专攻页结果和遗忘词均计入今日学习单词。
+
+### `GET /api/v1/stats/today/repeated-forgetting`
+
+返回今日再次遗忘单词明细。某词今天遗忘且此前已有有效遗忘，即属于再次遗忘。
+
+### `GET /api/v1/settings` 与 `PUT /api/v1/settings`
+
+读取或更新页大小、推荐间隔、主题、字号和词库优先级。页大小仅影响以后生成的新页面。
+
+### `GET /api/v1/backup/json` 与 `POST /api/v1/backup/json`
+
+导出或事务恢复版本化完整用户数据。导入前校验表结构和跨表引用，失败时不改变现有数据。
+
+### `GET /api/v1/vocabularies/{id}/export`
+
+按原 CSV 顺序导出 `number,word,meaning,source_page`，保留释义换行。

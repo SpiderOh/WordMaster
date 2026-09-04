@@ -6,14 +6,16 @@
 
 ## 当前迁移
 
-- 当前版本：`202609040003_special_attention`
+- 当前版本：`202609040004_user_settings`
 - 初始词库迁移：`backend/migrations/versions/202609040001_initial_vocabulary.py`
 - 学习页迁移：`backend/migrations/versions/202609040002_study_pages.py`
 - 专攻状态迁移：`backend/migrations/versions/202609040003_special_attention.py`
+- 用户设置迁移：`backend/migrations/versions/202609040004_user_settings.py`
 
 ## 已实现表
 
 - `users`：本地默认用户和后续服务器认证账户。
+- `user_settings`：页大小、推荐间隔、主题、字号和更新时间。
 - `vocabularies`：词库名称、原文件名、导入时间、总词数、激活状态、优先级和软删除时间。
 - `words`：词库内原始编号、英文、规范化英文、释义、原始页码和 CSV 顺序。
 - `word_progress`：用户与单词的学习状态、学习次数、遗忘次数、历史遗忘标志、专攻集合状态和推荐日期。

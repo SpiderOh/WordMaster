@@ -6,9 +6,9 @@
 
 ## 当前状态
 
-- 当前阶段：遗忘、熟词恢复与专攻页
-- 最近完成：Task 5 实现遗忘事件、筛选导出、熟词恢复和专攻页
-- 当前任务：执行实施计划 Task 6
+- 当前阶段：统计、设置与备份恢复
+- 最近完成：Task 6 实现统计、设置、JSON 备份恢复和词库 CSV 导出
+- 当前任务：执行实施计划 Task 7
 - 阻塞问题：无
 - 最后更新：2026-09-04
 
@@ -32,7 +32,7 @@
 - 测试命令：`cd backend && python -m pytest tests/test_health.py -q`；`cd frontend && npm run build`
 - Docker 启动：`docker compose up --build`，当前机器未检测到 Docker CLI
 - 本地地址：后端 `http://127.0.0.1:8000`；前端 `http://127.0.0.1:5173`
-- 数据库迁移版本：`202609040003_special_attention`
+- 数据库迁移版本：`202609040004_user_settings`
 
 ## 已实现接口与页面
 
@@ -52,6 +52,10 @@
 - `GET /api/v1/forgotten-words`、`GET /api/v1/forgotten-words/export`：遗忘排序、筛选、搜索和 CSV 导出。
 - `POST /api/v1/forgotten-words/{word_id}/undo`、`POST /api/v1/forgotten-words/{word_id}/restore`：撤销最近遗忘与恢复熟词。
 - `POST /api/v1/forgotten-words/special-page`、`POST /api/v1/forgotten-words/special-pages/{page_id}/complete`：专攻页创建和逐词结果。
+- `GET /api/v1/stats/today`、`GET /api/v1/stats/today/repeated-forgetting`：服务端今日统计和再次遗忘明细。
+- `GET/PUT /api/v1/settings`：页大小、推荐间隔、主题、字号和词库优先级。
+- `GET/POST /api/v1/backup/json`：版本化完整备份与事务恢复。
+- `GET /api/v1/vocabularies/{id}/export`：保留源字段和释义换行的词库 CSV。
 
 ## 数据模型变更
 
@@ -66,6 +70,8 @@
 - 外部源词库路径：`C:\Users\zhan\Desktop\wu\output\reden_vocabulary\reden_vocabulary_6550.csv`；仓库副本：`data/reden_vocabulary_6550.csv`；SHA256 均为 `3FEAA1FE5293A256C2C94BF0A1E380807CE59A2E9138DB5D50A419E628B12038`。
 - 完成撤销仅允许最新未撤销会话，并须在完成后 300 秒内执行；撤销后根据剩余有效会话恢复页面状态和首末学习时间。
 - 专攻集合由 `word_progress.needs_special_attention` 独立维护，不覆盖历史遗忘事件或遗忘次数。
+- 今日再次遗忘按“今天有有效遗忘且此前已有有效遗忘”的单词计数；同词一天多次只占一个明细。
+- JSON 备份导入先验证所有引用，再事务替换当前用户数据，失败完整回滚。
 
 ## 最近测试结果
 
@@ -85,10 +91,12 @@
 
 2026-09-04：Task 5 红灯测试首次失败于 `ModuleNotFoundError: No module named 'app.services.forgetting_service'`，后续依次复现缺少熟词恢复、遗忘列表、专攻页、API、筛选导出、未完成页遗忘和重复完成保护；绿灯测试 `cd backend && python -m pytest tests/test_forgetting.py -q` 结果 9 passed。
 
+2026-09-04：Task 6 红灯测试首次失败于 `ModuleNotFoundError: No module named 'app.services.stats_service'`，后续依次复现设置与统计 API 404、备份 API 404、词库导出 404、再次遗忘定义和专攻学习计数；绿灯测试 `cd backend && python -m pytest tests/test_stats_backup.py -q` 结果 7 passed。
+
 ## 下一步建议
 
-1. 执行 Task 6，完成统计、设置与备份恢复，验证 `backend/tests/test_stats_backup.py`。
-2. 执行 Task 7，完成学习、日期、遗忘和统计前端界面。
+1. 执行 Task 7，完成学习、日期、遗忘和统计前端界面。
+2. 执行 Task 8，完成 PWA 离线队列与同步 API。
 3. 每个任务完成后更新本文件和 `CHANGELOG.md`。
 
 ## AI 修改协议

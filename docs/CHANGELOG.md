@@ -23,4 +23,7 @@
 - 新增 `/api/v1/history/calendar`、`/api/v1/history` 和 `/api/v1/history/pages/{session_id}` 接口。
 - 实现遗忘事件累计与撤销、未完成页即时遗忘、熟词恢复、遗忘筛选搜索和 CSV 导出。
 - 新增专攻集合状态、专攻页创建，以及记得/遗忘/熟三种专攻完成结果。
+- 实现今日学习、遗忘、再次遗忘、连续学习天数和累计状态统计及明细 API。
+- 实现页大小、推荐间隔、主题、字号和词库优先级设置。
+- 实现版本化 JSON 全量备份恢复、事务回滚，以及单词库 CSV 导出。
 - 确认外部词库 `C:\Users\zhan\Desktop\wu\output\reden_vocabulary\reden_vocabulary_6550.csv` 与仓库 `data/reden_vocabulary_6550.csv` SHA256 一致。

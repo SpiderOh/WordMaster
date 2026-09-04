@@ -1,10 +1,11 @@
+import csv
 import io
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import User, Vocabulary
+from app.db.models import User, Vocabulary, Word
 from app.db.session import get_db
 from app.schemas.vocabularies import (
     ImportResponse,
@@ -79,6 +80,25 @@ def get_vocabulary(
     current_user: User = Depends(get_current_user),
 ) -> Vocabulary:
     return get_vocabulary_or_404(db, vocabulary_id, current_user.id)
+
+
+@router.get("/{vocabulary_id}/export")
+def export_vocabulary(
+    vocabulary_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    vocabulary = get_vocabulary_or_404(db, vocabulary_id, current_user.id)
+    output = io.StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow(["number", "word", "meaning", "source_page"])
+    for word in db.scalars(select(Word).where(Word.vocabulary_id == vocabulary.id).order_by(Word.position, Word.id)):
+        writer.writerow([word.original_number or "", word.word, word.meaning, word.source_page or ""])
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="vocabulary-{vocabulary.id}.csv"'},
+    )
 
 
 @router.patch("/{vocabulary_id}", response_model=VocabularyRead)

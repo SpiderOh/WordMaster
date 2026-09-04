@@ -44,6 +44,16 @@ class User(Base):
     vocabularies: Mapped[list["Vocabulary"]] = relationship(back_populates="user")
 
 
+class UserSettings(Base):
+    __tablename__ = "user_settings"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    page_size: Mapped[int] = mapped_column(Integer, default=15)
+    intervals: Mapped[list[int]] = mapped_column(JSON, default=lambda: [0, 1, 4])
+    theme: Mapped[str] = mapped_column(String(32), default="system")
+    font_size: Mapped[str] = mapped_column(String(32), default="medium")
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now, onupdate=utc_now)
+
 class Vocabulary(Base):
     __tablename__ = "vocabularies"
 
