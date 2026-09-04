@@ -30,6 +30,304 @@
         }
       }
     },
+    "/api/v1/forgotten-words": {
+      "get": {
+        "tags": [
+          "forgotten-words"
+        ],
+        "summary": "List Forgotten Words",
+        "operationId": "list_forgotten_words_api_v1_forgotten_words_get",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "vocabulary_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Vocabulary Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "forgotten_since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Forgotten Since"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ForgottenWordRead"
+                  },
+                  "title": "Response List Forgotten Words Api V1 Forgotten Words Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forgotten-words/export": {
+      "get": {
+        "tags": [
+          "forgotten-words"
+        ],
+        "summary": "Export Forgotten Words",
+        "operationId": "export_forgotten_words_api_v1_forgotten_words_export_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forgotten-words/special-page": {
+      "post": {
+        "tags": [
+          "forgotten-words"
+        ],
+        "summary": "Create Special Page",
+        "operationId": "create_special_page_api_v1_forgotten_words_special_page_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSpecialPageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyPageRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forgotten-words/special-pages/{page_id}/complete": {
+      "post": {
+        "tags": [
+          "forgotten-words"
+        ],
+        "summary": "Complete Special Page",
+        "operationId": "complete_special_page_api_v1_forgotten_words_special_pages__page_id__complete_post",
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Page Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteSpecialPageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudySessionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forgotten-words/{word_id}/restore": {
+      "post": {
+        "tags": [
+          "forgotten-words"
+        ],
+        "summary": "Restore Mastered Word",
+        "operationId": "restore_mastered_word_api_v1_forgotten_words__word_id__restore_post",
+        "parameters": [
+          {
+            "name": "word_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Word Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordProgressRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forgotten-words/{word_id}/undo": {
+      "post": {
+        "tags": [
+          "forgotten-words"
+        ],
+        "summary": "Undo Forgetting",
+        "operationId": "undo_forgetting_api_v1_forgotten_words__word_id__undo_post",
+        "parameters": [
+          {
+            "name": "word_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Word Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordProgressRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/history/calendar": {
       "get": {
         "tags": [
@@ -609,6 +907,67 @@
         }
       }
     },
+    "/api/v1/study-pages/{page_id}/words/{word_id}/forget": {
+      "post": {
+        "tags": [
+          "study-pages"
+        ],
+        "summary": "Mark Word Forgotten",
+        "operationId": "mark_word_forgotten_api_v1_study_pages__page_id__words__word_id__forget_post",
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Page Id"
+            }
+          },
+          {
+            "name": "word_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Word Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgetWordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordProgressRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/study-pages/{page_id}/complete": {
       "post": {
         "tags": [
@@ -815,6 +1174,49 @@
         "type": "object",
         "title": "CompletePageRequest"
       },
+      "CompleteSpecialPageRequest": {
+        "properties": {
+          "outcomes": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "remembered",
+                "forgotten",
+                "mastered"
+              ]
+            },
+            "type": "object",
+            "title": "Outcomes"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "outcomes",
+          "completed_at"
+        ],
+        "title": "CompleteSpecialPageRequest"
+      },
+      "CreateSpecialPageRequest": {
+        "properties": {
+          "word_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Word Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "word_ids"
+        ],
+        "title": "CreateSpecialPageRequest"
+      },
       "DateHistoryRead": {
         "properties": {
           "date": {
@@ -836,6 +1238,84 @@
           "pages"
         ],
         "title": "DateHistoryRead"
+      },
+      "ForgetWordRequest": {
+        "properties": {
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          }
+        },
+        "type": "object",
+        "title": "ForgetWordRequest"
+      },
+      "ForgottenWordRead": {
+        "properties": {
+          "word_id": {
+            "type": "integer",
+            "title": "Word Id"
+          },
+          "word": {
+            "type": "string",
+            "title": "Word"
+          },
+          "meaning": {
+            "type": "string",
+            "title": "Meaning"
+          },
+          "vocabulary_id": {
+            "type": "integer",
+            "title": "Vocabulary Id"
+          },
+          "vocabulary_name": {
+            "type": "string",
+            "title": "Vocabulary Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "study_count": {
+            "type": "integer",
+            "title": "Study Count"
+          },
+          "forget_count": {
+            "type": "integer",
+            "title": "Forget Count"
+          },
+          "last_forgotten_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Forgotten At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "word_id",
+          "word",
+          "meaning",
+          "vocabulary_id",
+          "vocabulary_name",
+          "status",
+          "study_count",
+          "forget_count",
+          "last_forgotten_at"
+        ],
+        "title": "ForgottenWordRead"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1026,6 +1506,10 @@
             "type": "integer",
             "title": "Page Size"
           },
+          "page_type": {
+            "type": "string",
+            "title": "Page Type"
+          },
           "status": {
             "type": "string",
             "title": "Status"
@@ -1047,6 +1531,7 @@
           "id",
           "page_number",
           "page_size",
+          "page_type",
           "status",
           "is_short",
           "words"
@@ -1302,6 +1787,44 @@
         },
         "type": "object",
         "title": "VocabularyUpdate"
+      },
+      "WordProgressRead": {
+        "properties": {
+          "word_id": {
+            "type": "integer",
+            "title": "Word Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "study_count": {
+            "type": "integer",
+            "title": "Study Count"
+          },
+          "forget_count": {
+            "type": "integer",
+            "title": "Forget Count"
+          },
+          "has_forgotten": {
+            "type": "boolean",
+            "title": "Has Forgotten"
+          },
+          "needs_special_attention": {
+            "type": "boolean",
+            "title": "Needs Special Attention"
+          }
+        },
+        "type": "object",
+        "required": [
+          "word_id",
+          "status",
+          "study_count",
+          "forget_count",
+          "has_forgotten",
+          "needs_special_attention"
+        ],
+        "title": "WordProgressRead"
       }
     }
   }

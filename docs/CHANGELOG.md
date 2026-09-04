@@ -21,4 +21,6 @@
 - 完成撤销限制为最新记录且须在五分钟内执行，并从剩余会话恢复页面和进度时间。
 - 实现 `0、1、4` 天推荐日期、整月日历摘要、按日期的学习轮次状态和不可变历史快照相邻导航。
 - 新增 `/api/v1/history/calendar`、`/api/v1/history` 和 `/api/v1/history/pages/{session_id}` 接口。
+- 实现遗忘事件累计与撤销、未完成页即时遗忘、熟词恢复、遗忘筛选搜索和 CSV 导出。
+- 新增专攻集合状态、专攻页创建，以及记得/遗忘/熟三种专攻完成结果。
 - 确认外部词库 `C:\Users\zhan\Desktop\wu\output\reden_vocabulary\reden_vocabulary_6550.csv` 与仓库 `data/reden_vocabulary_6550.csv` SHA256 一致。

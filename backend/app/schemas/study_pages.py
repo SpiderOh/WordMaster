@@ -22,6 +22,7 @@ class StudyPageRead(BaseModel):
     id: int
     page_number: int
     page_size: int
+    page_type: str
     status: str
     is_short: bool
     words: list[StudyPageWordRead]

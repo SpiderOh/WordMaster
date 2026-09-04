@@ -345,6 +345,7 @@ class StudyPageService:
             id=page.id,
             page_number=page.page_number,
             page_size=page.page_size,
+            page_type=page.page_type,
             status=page.status,
             is_short=page.is_short,
             words=words,

@@ -13,6 +13,8 @@ from app.schemas.study_pages import (
     UndoCompletionRequest,
     UndoCompletionResponse,
 )
+from app.schemas.forgotten_words import ForgetWordRequest, WordProgressRead
+from app.services.forgetting_service import ForgettingNotFoundError, ForgettingService
 from app.services.study_page_service import NoEligibleWordsError, StudyPageNotFoundError, StudyPageService
 
 router = APIRouter(tags=["study-pages"])
@@ -71,6 +73,28 @@ def mark_word_mastered(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return service.to_read(page)
+
+
+@router.post("/{page_id}/words/{word_id}/forget", response_model=WordProgressRead)
+def mark_word_forgotten(
+    page_id: int,
+    word_id: int,
+    payload: ForgetWordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> WordProgressRead:
+    try:
+        progress = ForgettingService(db).mark_forgotten(
+            user_id=current_user.id,
+            word_id=word_id,
+            session_id=payload.session_id,
+            page_id=page_id,
+        )
+    except ForgettingNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return WordProgressRead.model_validate(progress)
 
 
 @router.post(

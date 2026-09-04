@@ -6,21 +6,22 @@
 
 ## 当前迁移
 
-- 当前版本：`202609040002_study_pages`
+- 当前版本：`202609040003_special_attention`
 - 初始词库迁移：`backend/migrations/versions/202609040001_initial_vocabulary.py`
 - 学习页迁移：`backend/migrations/versions/202609040002_study_pages.py`
+- 专攻状态迁移：`backend/migrations/versions/202609040003_special_attention.py`
 
 ## 已实现表
 
 - `users`：本地默认用户和后续服务器认证账户。
 - `vocabularies`：词库名称、原文件名、导入时间、总词数、激活状态、优先级和软删除时间。
 - `words`：词库内原始编号、英文、规范化英文、释义、原始页码和 CSV 顺序。
-- `word_progress`：用户与单词的学习状态、学习次数、遗忘次数、历史遗忘标志和推荐日期。
+- `word_progress`：用户与单词的学习状态、学习次数、遗忘次数、历史遗忘标志、专攻集合状态和推荐日期。
 - `operation_logs`：词库导入、重命名、激活/停用、优先级和删除操作的追加日志。
 - `study_pages`：用户学习页、页大小、状态、是否不足页、创建和完成时间。
 - `study_page_words`：学习页内单词顺序、加入原因、是否仍在当前未完成页。
 - `study_sessions`：每次完成本页的完成时间、增量次数、不可变页面快照和撤销时间。
-- `word_study_events`：完成学习、撤销完成和标记熟等单词级不可覆盖事件。
+- `word_study_events`：完成学习、撤销完成、遗忘、撤销遗忘、专攻结果和标记熟等单词级不可覆盖事件。
 
 ## 当前索引与约束
 

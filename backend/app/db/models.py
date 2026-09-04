@@ -93,6 +93,7 @@ class WordProgress(Base):
     study_count: Mapped[int] = mapped_column(Integer, default=0)
     forget_count: Mapped[int] = mapped_column(Integer, default=0)
     has_forgotten: Mapped[bool] = mapped_column(Boolean, default=False)
+    needs_special_attention: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     first_studied_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(), nullable=True)
     last_studied_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(), nullable=True)
     mastered_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(), nullable=True)

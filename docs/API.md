@@ -101,3 +101,27 @@ API 前缀为 `/api/v1`，使用 FastAPI 自动生成 OpenAPI。目标模块包�
 ### `GET /api/v1/history/pages/{session_id}`
 
 返回指定完成会话保存的不可变页面快照，以及按完成时间排序的前后会话 ID。后续修改页大小不会改变历史快照。
+
+### `POST /api/v1/study-pages/{id}/words/{word_id}/forget`
+
+在完成会话或当前未完成页中记录一次遗忘并立即提交。未完成页遗忘不会增加学习次数；请求可带 `session_id` 关联历史完成会话。
+
+### `GET /api/v1/forgotten-words`
+
+默认按遗忘次数降序返回，支持 `search`、`vocabulary_id`、`status` 和 `forgotten_since` 筛选。
+
+### `GET /api/v1/forgotten-words/export`
+
+导出包含单词、释义、词库、状态、学习次数、遗忘次数和最近遗忘时间的 CSV。
+
+### `POST /api/v1/forgotten-words/{word_id}/undo`
+
+追加撤销事件并抵消最近一条尚未撤销的遗忘事件，不允许直接填写遗忘次数。
+
+### `POST /api/v1/forgotten-words/{word_id}/restore`
+
+将熟词恢复为未学习并重新进入普通选词队列。
+
+### `POST /api/v1/forgotten-words/special-page`
+
+从所选遗忘词创建专攻页。`POST /api/v1/forgotten-words/special-pages/{page_id}/complete` 逐词接收 `remembered`、`forgotten` 或 `mastered` 结果。
