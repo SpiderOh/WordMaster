@@ -42,10 +42,12 @@ describe("LearningPage", () => {
 
     expect(screen.getAllByTestId("word-row")).toHaveLength(15);
     expect(screen.queryByText("meaning-1")).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("word-row")[0].querySelector("small")).not.toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "标记熟" })).toHaveLength(14);
 
     await user.click(screen.getByText("word-1"));
     expect(screen.getByText("meaning-1")).toBeInTheDocument();
+    expect(screen.getAllByTestId("meaning-slot")[0]).toHaveAttribute("data-position", "right");
 
     await user.click(screen.getByRole("button", { name: "完成本页" }));
     expect(screen.getByRole("dialog", { name: "确认完成" })).toBeInTheDocument();

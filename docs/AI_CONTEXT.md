@@ -111,6 +111,7 @@
 2026-09-04：Task 9 红灯测试首次失败于缺少安全模块，后续复现密码夹具策略和前端登录组件缺失；绿灯测试 `cd backend && python -m pytest tests/test_auth.py -q` 结果 3 passed，后端全量 59 passed；`cd frontend && npm test -- --run` 结果 8 files、10 tests passed，类型检查、生产构建、迁移升级和 OpenAPI 生成成功。Docker CLI 未安装，容器 smoke test 未执行。
 
 2026-09-04：默认词库红灯测试首次失败于缺少默认初始化服务；绿灯测试 `cd backend && python -m pytest tests/test_default_vocabulary.py -q` 结果 2 passed，实际本地启动验证默认词库 6547 个有效词并成功返回下一学习页。
+2026-09-04：学习界面简化红灯测试复现单词下方仍存在元数据行；移除元数据并将展开释义放到单词右侧，针对性测试 1 passed，前端全量测试 8 files、10 tests passed，类型检查和生产构建成功。
 
 ## 下一步建议
 

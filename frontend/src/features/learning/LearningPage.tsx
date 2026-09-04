@@ -44,11 +44,10 @@ export function LearningPage({ page, onComplete, onForget, onMaster }: LearningP
                 onClick={() => toggleReveal(item.word_id)}
                 aria-label={`${isRevealed ? "隐藏" : "显示"} ${item.word} 的释义`}
               >
-                <span className="meaning-slot">{isRevealed ? item.meaning : ""}</span>
                 <span className="word-copy">
                   <strong>{item.word}</strong>
-                  <small>{item.vocabulary_name} · 学 {item.study_count} · 忘 {item.forget_count}</small>
                 </span>
+                <span className="meaning-slot" data-position="right" data-testid="meaning-slot">{isRevealed ? item.meaning : ""}</span>
                 {isRevealed ? <EyeOff aria-hidden="true" size={18} /> : <Eye aria-hidden="true" size={18} />}
               </button>
               <div className="word-actions">
