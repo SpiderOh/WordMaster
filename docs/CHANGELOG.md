@@ -19,4 +19,6 @@
 - 无可学习单词时不再持久化空页面；熟词无替补时正确标记短页。
 - 当前页最后一个词标熟且无替补时将页面标记为 `exhausted`，后续不再复用空页。
 - 完成撤销限制为最新记录且须在五分钟内执行，并从剩余会话恢复页面和进度时间。
+- 实现 `0、1、4` 天推荐日期、整月日历摘要、按日期的学习轮次状态和不可变历史快照相邻导航。
+- 新增 `/api/v1/history/calendar`、`/api/v1/history` 和 `/api/v1/history/pages/{session_id}` 接口。
 - 确认外部词库 `C:\Users\zhan\Desktop\wu\output\reden_vocabulary\reden_vocabulary_6550.csv` 与仓库 `data/reden_vocabulary_6550.csv` SHA256 一致。

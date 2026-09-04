@@ -30,6 +30,134 @@
         }
       }
     },
+    "/api/v1/history/calendar": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Get Calendar",
+        "operationId": "get_calendar_api_v1_history_calendar_get",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSummaryRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Get History For Date",
+        "operationId": "get_history_for_date_api_v1_history_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DateHistoryRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/pages/{session_id}": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Get History Page",
+        "operationId": "get_history_page_api_v1_history_pages__session_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryPageSnapshotRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/vocabularies/import": {
       "post": {
         "tags": [
@@ -366,6 +494,9 @@
               }
             }
           },
+          "404": {
+            "description": "No eligible words available"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -459,6 +590,12 @@
               }
             }
           },
+          "400": {
+            "description": "Word cannot be marked mastered"
+          },
+          "404": {
+            "description": "Study page or word progress not found"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -510,6 +647,12 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Study page cannot be completed"
+          },
+          "404": {
+            "description": "Study page not found"
           },
           "422": {
             "description": "Validation Error",
@@ -563,6 +706,12 @@
               }
             }
           },
+          "400": {
+            "description": "Completion cannot be undone"
+          },
+          "404": {
+            "description": "Study session not found"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -598,6 +747,56 @@
         ],
         "title": "Body_import_vocabulary_api_v1_vocabularies_import_post"
       },
+      "CalendarDayRead": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "has_study": {
+            "type": "boolean",
+            "title": "Has Study"
+          },
+          "is_recommended": {
+            "type": "boolean",
+            "title": "Is Recommended"
+          },
+          "completion_count": {
+            "type": "integer",
+            "title": "Completion Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "has_study",
+          "is_recommended",
+          "completion_count"
+        ],
+        "title": "CalendarDayRead"
+      },
+      "CalendarSummaryRead": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarDayRead"
+            },
+            "type": "array",
+            "title": "Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "days"
+        ],
+        "title": "CalendarSummaryRead"
+      },
       "CompletePageRequest": {
         "properties": {
           "completed_at": {
@@ -616,6 +815,28 @@
         "type": "object",
         "title": "CompletePageRequest"
       },
+      "DateHistoryRead": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "pages": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryPageSummaryRead"
+            },
+            "type": "array",
+            "title": "Pages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "pages"
+        ],
+        "title": "DateHistoryRead"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -628,6 +849,120 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HistoryPageSnapshotRead": {
+        "properties": {
+          "session_id": {
+            "type": "integer",
+            "title": "Session Id"
+          },
+          "page_id": {
+            "type": "integer",
+            "title": "Page Id"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Completed At"
+          },
+          "snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Snapshot"
+          },
+          "previous_session_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Session Id"
+          },
+          "next_session_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "page_id",
+          "completed_at",
+          "snapshot",
+          "previous_session_id",
+          "next_session_id"
+        ],
+        "title": "HistoryPageSnapshotRead"
+      },
+      "HistoryPageSummaryRead": {
+        "properties": {
+          "page_id": {
+            "type": "integer",
+            "title": "Page Id"
+          },
+          "page_number": {
+            "type": "integer",
+            "title": "Page Number"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "study_number": {
+            "type": "integer",
+            "title": "Study Number"
+          },
+          "completed_on_date": {
+            "type": "boolean",
+            "title": "Completed On Date"
+          },
+          "is_recommended": {
+            "type": "boolean",
+            "title": "Is Recommended"
+          },
+          "second_completed": {
+            "type": "boolean",
+            "title": "Second Completed"
+          },
+          "third_completed": {
+            "type": "boolean",
+            "title": "Third Completed"
+          },
+          "remaining_recommended_rounds": {
+            "type": "integer",
+            "title": "Remaining Recommended Rounds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page_id",
+          "page_number",
+          "session_id",
+          "study_number",
+          "completed_on_date",
+          "is_recommended",
+          "second_completed",
+          "third_completed",
+          "remaining_recommended_rounds"
+        ],
+        "title": "HistoryPageSummaryRead"
       },
       "ImportResponse": {
         "properties": {

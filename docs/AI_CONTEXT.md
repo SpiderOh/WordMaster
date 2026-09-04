@@ -6,9 +6,9 @@
 
 ## 当前状态
 
-- 当前阶段：学习页
-- 最近完成：Task 3 实现学习页生成、熟词替换、页面完成、快照和撤销完成
-- 当前任务：执行实施计划 Task 4
+- 当前阶段：日期历史与推荐日期
+- 最近完成：Task 4 实现推荐日期、日历摘要、日期轮次状态和历史快照导航
+- 当前任务：执行实施计划 Task 5
 - 阻塞问题：无
 - 最后更新：2026-09-04
 
@@ -45,6 +45,9 @@
 - `POST /api/v1/study-pages/{id}/complete`：完成页面并写入快照和学习事件，测试位置 `backend/tests/test_study_pages.py`。
 - `POST /api/v1/study-pages/{id}/undo-complete`：撤销完成页增量并追加撤销事件，测试位置 `backend/tests/test_study_pages.py`。
 - 学习页无候选词时返回 404 且不落空页；最后一个词标熟后页面转为 `exhausted`；熟词替换、完成与撤销均在异常时回滚。
+- `GET /api/v1/history/calendar?month=YYYY-MM`：返回整月实际完成、推荐日期和灰色空白日期。
+- `GET /api/v1/history?date=YYYY-MM-DD`：返回当天实际或推荐页面、学习轮次及第二/第三次完成状态。
+- `GET /api/v1/history/pages/{session_id}`：返回不可变完成快照及前后完成会话。
 
 ## 数据模型变更
 
@@ -73,10 +76,12 @@
 
 2026-09-04：Task 3 评审修复分别以失败测试复现空页持久化、短页标记陈旧、旧会话可撤销、超时可撤销、状态时间未恢复及三类事务未回滚；二次复查补全全熟空页、未来完成时间和 OpenAPI 错误响应，最终 `cd backend && python -m pytest tests/test_study_pages.py -q` 结果 21 passed。
 
+2026-09-04：Task 4 红灯测试首次失败于 `ModuleNotFoundError: No module named 'app.services.history_service'`，后续依次复现缺少月历、日期详情、历史快照和推荐轮次错误；绿灯测试 `cd backend && python -m pytest tests/test_history_and_schedule.py -q` 结果 6 passed。
+
 ## 下一步建议
 
-1. 执行 Task 4，完成日期历史和推荐日期，验证 `backend/tests/test_history_and_schedule.py`。
-2. 执行 Task 5，完成遗忘入口、熟词恢复与专攻页，验证 `backend/tests/test_forgetting.py`。
+1. 执行 Task 5，完成遗忘入口、熟词恢复与专攻页，验证 `backend/tests/test_forgetting.py`。
+2. 执行 Task 6，完成统计、设置与备份恢复，验证 `backend/tests/test_stats_backup.py`。
 3. 每个任务完成后更新本文件和 `CHANGELOG.md`。
 
 ## AI 修改协议
