@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -16,9 +16,18 @@ from app.schemas.study_pages import StudyPageRead, StudyPageWordRead
 from app.services.audit import log_operation
 
 
+class NoEligibleWordsError(ValueError):
+    pass
+
+
+class StudyPageNotFoundError(ValueError):
+    pass
+
+
 class StudyPageService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, undo_window_seconds: int = 300):
         self.db = db
+        self.undo_window_seconds = undo_window_seconds
 
     def get_or_create_next_page(self, user_id: int, page_size: int) -> StudyPage:
         existing = self.db.scalar(
@@ -33,12 +42,15 @@ class StudyPageService:
         if existing is not None:
             return existing
 
+        selected_words = self._candidate_words(user_id=user_id, limit=page_size, excluded_word_ids=set())
+        if not selected_words:
+            raise NoEligibleWordsError("No eligible words available")
+
         next_number = (self.db.scalar(select(func.max(StudyPage.page_number)).where(StudyPage.user_id == user_id)) or 0) + 1
         page = StudyPage(user_id=user_id, page_number=next_number, page_size=page_size)
         self.db.add(page)
         self.db.flush()
 
-        selected_words = self._candidate_words(user_id=user_id, limit=page_size, excluded_word_ids=set())
         for display_order, word in enumerate(selected_words, start=1):
             self.db.add(
                 StudyPageWord(
@@ -68,6 +80,13 @@ class StudyPageService:
         return page
 
     def replace_mastered_word(self, page_id: int, word_id: int, user_id: int = 1) -> StudyPage:
+        try:
+            return self._replace_mastered_word(page_id=page_id, word_id=word_id, user_id=user_id)
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def _replace_mastered_word(self, page_id: int, word_id: int, user_id: int) -> StudyPage:
         page = self._require_page(page_id=page_id, user_id=user_id)
         link = self.db.scalar(
             select(StudyPageWord).where(
@@ -116,7 +135,8 @@ class StudyPageService:
                     join_reason="mastered_replacement",
                 )
             )
-        page.is_short = len(self._active_links(page.id)) + len(replacement) < page.page_size
+        self.db.flush()
+        page.is_short = len(self._active_links(page.id)) < page.page_size
         log_operation(
             self.db,
             user_id=user_id,
@@ -131,6 +151,13 @@ class StudyPageService:
         return page
 
     def complete_page(self, page_id: int, completed_at: datetime, user_id: int = 1) -> StudySession:
+        try:
+            return self._complete_page(page_id=page_id, completed_at=completed_at, user_id=user_id)
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def _complete_page(self, page_id: int, completed_at: datetime, user_id: int) -> StudySession:
         page = self._require_page(page_id=page_id, user_id=user_id)
         active_links = self._active_links(page.id)
         if not active_links:
@@ -194,21 +221,72 @@ class StudyPageService:
         self.db.refresh(session)
         return session
 
-    def undo_completion(self, session_id: int, page_id: int | None = None, user_id: int = 1) -> StudySession:
+    def undo_completion(
+        self,
+        session_id: int,
+        page_id: int | None = None,
+        user_id: int = 1,
+        now: datetime | None = None,
+    ) -> StudySession:
+        try:
+            return self._undo_completion(session_id=session_id, page_id=page_id, user_id=user_id, now=now)
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def _undo_completion(
+        self,
+        session_id: int,
+        page_id: int | None,
+        user_id: int,
+        now: datetime | None,
+    ) -> StudySession:
         session = self.db.get(StudySession, session_id)
         if session is None or session.user_id != user_id:
-            raise ValueError("Study session not found")
+            raise StudyPageNotFoundError("Study session not found")
         if page_id is not None and session.page_id != page_id:
             raise ValueError("Study session does not belong to this page")
         if session.undone_at is not None:
-            return session
+            raise ValueError("Study session was already undone")
 
-        undone_at = datetime.now(timezone.utc)
+        latest_session = self.db.scalar(
+            select(StudySession)
+            .where(
+                StudySession.user_id == user_id,
+                StudySession.page_id == session.page_id,
+                StudySession.undone_at.is_(None),
+            )
+            .order_by(StudySession.completed_at.desc(), StudySession.id.desc())
+        )
+        if latest_session is None or latest_session.id != session.id:
+            raise ValueError("Only the latest completion can be undone")
+
+        undone_at = now or datetime.now(timezone.utc)
+        if undone_at - session.completed_at > timedelta(seconds=self.undo_window_seconds):
+            raise ValueError("Completion undo window has expired")
+        remaining_sessions = list(
+            self.db.scalars(
+                select(StudySession)
+                .where(
+                    StudySession.user_id == user_id,
+                    StudySession.id != session.id,
+                    StudySession.undone_at.is_(None),
+                )
+                .order_by(StudySession.completed_at, StudySession.id)
+            )
+        )
         for snapshot_word in session.snapshot["words"]:
             word_id = int(snapshot_word["word_id"])
             progress = self._progress_for_word(user_id=user_id, word_id=word_id)
             progress.study_count = max(0, progress.study_count - session.study_count_increment)
             progress.status = "unlearned" if progress.study_count == 0 else "learning"
+            completion_times = [
+                candidate.completed_at
+                for candidate in remaining_sessions
+                if any(int(item["word_id"]) == word_id for item in candidate.snapshot.get("words", []))
+            ]
+            progress.first_studied_at = completion_times[0] if completion_times else None
+            progress.last_studied_at = completion_times[-1] if completion_times else None
             self.db.add(
                 WordStudyEvent(
                     user_id=user_id,
@@ -223,8 +301,9 @@ class StudyPageService:
         session.undone_at = undone_at
         page = self.db.get(StudyPage, session.page_id)
         if page is not None:
-            page.status = "in_progress"
-            page.completed_at = None
+            page_sessions = [candidate for candidate in remaining_sessions if candidate.page_id == page.id]
+            page.status = "completed" if page_sessions else "in_progress"
+            page.completed_at = page_sessions[-1].completed_at if page_sessions else None
         log_operation(
             self.db,
             user_id=user_id,
@@ -318,11 +397,11 @@ class StudyPageService:
     def _require_page(self, page_id: int, user_id: int) -> StudyPage:
         page = self.get_page(page_id=page_id, user_id=user_id)
         if page is None:
-            raise ValueError("Study page not found")
+            raise StudyPageNotFoundError("Study page not found")
         return page
 
     def _progress_for_word(self, user_id: int, word_id: int) -> WordProgress:
         progress = self.db.scalar(select(WordProgress).where(WordProgress.user_id == user_id, WordProgress.word_id == word_id))
         if progress is None:
-            raise ValueError("Word progress not found")
+            raise StudyPageNotFoundError("Word progress not found")
         return progress

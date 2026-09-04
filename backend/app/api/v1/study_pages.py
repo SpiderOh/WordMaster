@@ -13,7 +13,7 @@ from app.schemas.study_pages import (
     UndoCompletionRequest,
     UndoCompletionResponse,
 )
-from app.services.study_page_service import StudyPageService
+from app.services.study_page_service import NoEligibleWordsError, StudyPageNotFoundError, StudyPageService
 
 router = APIRouter(tags=["study-pages"])
 
@@ -24,8 +24,12 @@ def get_next_page(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> StudyPageRead:
-    page = StudyPageService(db).get_or_create_next_page(user_id=current_user.id, page_size=page_size)
-    return StudyPageService(db).to_read(page)
+    service = StudyPageService(db)
+    try:
+        page = service.get_or_create_next_page(user_id=current_user.id, page_size=page_size)
+    except NoEligibleWordsError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return service.to_read(page)
 
 
 @router.get("/{page_id}", response_model=StudyPageRead)
@@ -51,6 +55,8 @@ def mark_word_mastered(
     service = StudyPageService(db)
     try:
         page = service.replace_mastered_word(page_id=page_id, word_id=word_id, user_id=current_user.id)
+    except StudyPageNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return service.to_read(page)
@@ -67,6 +73,8 @@ def complete_page(
     service = StudyPageService(db)
     try:
         session = service.complete_page(page_id=page_id, completed_at=completed_at, user_id=current_user.id)
+    except StudyPageNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return StudySessionRead.model_validate(session)
@@ -82,6 +90,8 @@ def undo_complete(
     service = StudyPageService(db)
     try:
         service.undo_completion(session_id=payload.session_id, page_id=page_id, user_id=current_user.id)
+    except StudyPageNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return UndoCompletionResponse(status="undone")

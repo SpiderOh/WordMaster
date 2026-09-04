@@ -44,6 +44,7 @@
 - `POST /api/v1/study-pages/{id}/words/{word_id}/master`：首次学习标记熟并补词，测试位置 `backend/tests/test_study_pages.py`。
 - `POST /api/v1/study-pages/{id}/complete`：完成页面并写入快照和学习事件，测试位置 `backend/tests/test_study_pages.py`。
 - `POST /api/v1/study-pages/{id}/undo-complete`：撤销完成页增量并追加撤销事件，测试位置 `backend/tests/test_study_pages.py`。
+- 学习页无候选词时返回 404 且不落空页；熟词替换、完成与撤销均在异常时回滚。
 
 ## 数据模型变更
 
@@ -56,6 +57,7 @@
 ## 重要业务规则
 
 - 外部源词库路径：`C:\Users\zhan\Desktop\wu\output\reden_vocabulary\reden_vocabulary_6550.csv`；仓库副本：`data/reden_vocabulary_6550.csv`；SHA256 均为 `3FEAA1FE5293A256C2C94BF0A1E380807CE59A2E9138DB5D50A419E628B12038`。
+- 完成撤销仅允许最新未撤销会话，并须在完成后 300 秒内执行；撤销后根据剩余有效会话恢复页面状态和首末学习时间。
 
 ## 最近测试结果
 
@@ -68,6 +70,8 @@
 2026-09-04：Task 2 绿灯测试 `cd backend && python -m pytest tests/test_vocabulary_import.py -q` 结果 7 passed；`cd backend && python -m pytest -q` 结果 8 passed；`cd backend && alembic upgrade head` 成功升级到 `202609040001`。
 
 2026-09-04：Task 3 红灯测试 `cd backend && python -m pytest tests/test_study_pages.py -q` 首次失败于 `ImportError: cannot import name 'StudyPage'`；补熟词替换 API 测试后失败于 `404 == 200`；实现后 `cd backend && python -m pytest tests/test_study_pages.py -q` 结果 8 passed；`cd backend && python -m pytest -q` 结果 16 passed；`cd backend && alembic upgrade head` 成功升级到 `202609040002`。
+
+2026-09-04：Task 3 评审修复分别以失败测试复现空页持久化、短页标记陈旧、旧会话可撤销、超时可撤销、状态时间未恢复及三类事务未回滚；修复后 `cd backend && python -m pytest tests/test_study_pages.py -q` 结果 18 passed。
 
 ## 下一步建议
 
