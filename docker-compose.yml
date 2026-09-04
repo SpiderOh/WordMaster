@@ -1,0 +1,23 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      WORDMASTER_DATABASE_URL: ${WORDMASTER_DATABASE_URL:-sqlite:///./data/wordmaster.db}
+      WORDMASTER_AUTH_MODE: ${WORDMASTER_AUTH_MODE:-local}
+      WORDMASTER_SECRET_KEY: ${WORDMASTER_SECRET_KEY:-replace-in-.env}
+    ports:
+      - "8000:8000"
+    volumes:
+      - wordmaster_data:/app/data
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  wordmaster_data:

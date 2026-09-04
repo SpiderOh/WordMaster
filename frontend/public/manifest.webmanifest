@@ -1,0 +1,9 @@
+{
+  "name": "WordMaster",
+  "short_name": "WordMaster",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f2",
+  "theme_color": "#1f6f68",
+  "icons": []
+}

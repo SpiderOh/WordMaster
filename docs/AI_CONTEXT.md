@@ -6,11 +6,11 @@
 
 ## 当前状态
 
-- 当前阶段：设计完成，代码实现未开始
-- 最近完成：产品规格、实施计划、开发总提示词、仓库初始化
-- 当前任务：执行实施计划 Task 1
+- 当前阶段：骨架
+- 最近完成：Task 1 建立 FastAPI 后端、React/Vite 前端、PWA 占位、Docker Compose 和健康检查
+- 当前任务：执行实施计划 Task 2
 - 阻塞问题：无
-- 最后更新：2026-09-02
+- 最后更新：2026-09-04
 
 ## 关键文档
 
@@ -27,25 +27,27 @@
 
 ## 当前技术状态
 
-- 后端启动：未实现
-- 前端启动：未实现
-- 测试命令：未实现
-- Docker 启动：未实现
-- 本地地址：未实现
+- 后端启动：`cd backend && uvicorn app.main:app --reload`
+- 前端启动：`cd frontend && npm run dev`
+- 测试命令：`cd backend && python -m pytest tests/test_health.py -q`；`cd frontend && npm run build`
+- Docker 启动：`docker compose up --build`，当前机器未检测到 Docker CLI
+- 本地地址：后端 `http://127.0.0.1:8000`；前端 `http://127.0.0.1:5173`
 - 数据库迁移版本：未实现
 
 ## 已实现接口与页面
 
-尚未实现。完成每个任务后按模块补充接口、组件和测试位置。
+- `GET /api/v1/health`：返回 `{ "status": "ok", "version": string }`，测试位置 `backend/tests/test_health.py`。
 
 ## 最近测试结果
 
-2026-09-02：已完成文档自检；应用测试尚未开始。
+2026-09-04：Task 1 红灯测试 `cd backend && python -m pytest tests/test_health.py -q` 首次失败于 `ModuleNotFoundError: No module named 'app'`，补最小入口后失败于 `404 != 200`。
+
+2026-09-04：Task 1 绿灯测试 `cd backend && python -m pytest tests/test_health.py -q` 结果 1 passed；`cd frontend && npm run build` 结果 Vite production build 成功。
 
 ## 下一步建议
 
-1. 执行 Task 1，建立前后端骨架和健康检查。
-2. 执行 Task 2，完成数据库迁移和 CSV 导入。
+1. 执行 Task 2，完成数据库迁移和 CSV 导入，验证 `backend/tests/test_vocabulary_import.py`。
+2. 执行 Task 3，完成学习页、快照、熟词替换和完成页事件。
 3. 每个任务完成后更新本文件和 `CHANGELOG.md`。
 
 ## AI 修改协议
