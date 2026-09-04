@@ -8,10 +8,12 @@ services:
       WORDMASTER_SECRET_KEY: ${WORDMASTER_SECRET_KEY:?set WORDMASTER_SECRET_KEY in .env}
       WORDMASTER_SERVER_USERNAME: ${WORDMASTER_SERVER_USERNAME:-}
       WORDMASTER_SERVER_PASSWORD: ${WORDMASTER_SERVER_PASSWORD:-}
+      WORDMASTER_DEFAULT_VOCABULARY_PATH: ${WORDMASTER_DEFAULT_VOCABULARY_PATH:-/app/default-vocabulary.csv}
     ports:
       - "8000:8000"
     volumes:
       - wordmaster_data:/app/data
+      - ./data/reden_vocabulary_6550.csv:/app/default-vocabulary.csv:ro
 
   frontend:
     build:

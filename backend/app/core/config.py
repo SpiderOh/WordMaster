@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     access_token_minutes: int = 60
     server_username: str | None = None
     server_password: str | None = None
+    default_vocabulary_path: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="WORDMASTER_")
 

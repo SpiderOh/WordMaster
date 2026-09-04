@@ -48,7 +48,7 @@ npm install
 npm run dev
 ```
 
-打开 `http://127.0.0.1:5173`。本地模式免登录；服务器模式需在 `.env` 设置 `WORDMASTER_AUTH_MODE=server`、`WORDMASTER_SECRET_KEY`、`WORDMASTER_SERVER_USERNAME` 和 `WORDMASTER_SERVER_PASSWORD`。
+打开 `http://127.0.0.1:5173`。首次启动会自动导入并启用默认词库 `data/reden_vocabulary_6550.csv`，已有词库时不会重复导入。本地模式免登录；服务器模式需在 `.env` 设置 `WORDMASTER_AUTH_MODE=server`、`WORDMASTER_SECRET_KEY`、`WORDMASTER_SERVER_USERNAME` 和 `WORDMASTER_SERVER_PASSWORD`。
 
 ## 验证
 

@@ -18,6 +18,8 @@ API 前缀为 `/api/v1`，使用 FastAPI 自动生成 OpenAPI。目标模块包�
 
 返回后端进程状态和应用版本。
 
+本地首次启动会自动导入并启用 `data/reden_vocabulary_6550.csv`；该初始化不新增 API 请求，词库仍可通过词库管理接口查询和导出。
+
 响应示例：
 
 ```json
