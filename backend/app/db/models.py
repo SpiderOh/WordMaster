@@ -54,6 +54,17 @@ class UserSettings(Base):
     font_size: Mapped[str] = mapped_column(String(32), default="medium")
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now, onupdate=utc_now)
 
+
+class AuthToken(Base):
+    __tablename__ = "auth_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    token_id: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime(), index=True)
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+
 class Vocabulary(Base):
     __tablename__ = "vocabularies"
 

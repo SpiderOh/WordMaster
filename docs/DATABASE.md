@@ -6,12 +6,13 @@
 
 ## 当前迁移
 
-- 当前版本：`202609040005_sync_records`
+- 当前版本：`202609040006_auth_tokens`
 - 初始词库迁移：`backend/migrations/versions/202609040001_initial_vocabulary.py`
 - 学习页迁移：`backend/migrations/versions/202609040002_study_pages.py`
 - 专攻状态迁移：`backend/migrations/versions/202609040003_special_attention.py`
 - 用户设置迁移：`backend/migrations/versions/202609040004_user_settings.py`
 - 同步记录迁移：`backend/migrations/versions/202609040005_sync_records.py`
+- 认证令牌迁移：`backend/migrations/versions/202609040006_auth_tokens.py`
 
 ## 已实现表
 
@@ -26,6 +27,7 @@
 - `study_sessions`：每次完成本页的完成时间、增量次数、不可变页面快照和撤销时间。
 - `word_study_events`：完成学习、撤销完成、遗忘、撤销遗忘、专攻结果和标记熟等单词级不可覆盖事件。
 - `sync_records`：唯一事件 ID、设备、客户端/服务器时间、实体、变更、处理状态和冲突详情。
+- `auth_tokens`：令牌 jti、用户、创建/过期时间和撤销状态；数据库不保存可直接使用的访问令牌。
 
 ## 当前索引与约束
 

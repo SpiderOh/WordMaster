@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-项目已完成产品设计和实施计划，尚未开始应用代码实现。词库样本已纳入仓库，后续 AI 可直接从第一阶段开始开发。
+项目已完成移动端优先 PWA、FastAPI 后端、CSV 词库、学习历史、遗忘专攻、离线同步和服务器认证实现。
 
 ## 交给 AI 开发
 
@@ -28,6 +28,36 @@
 - 后端：FastAPI + SQLite
 - 接口：REST + OpenAPI
 - 部署：Docker Compose
+
+## 本地运行
+
+后端：
+
+```powershell
+cd backend
+python -m pip install -e ".[dev]"
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+前端另开终端：
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+打开 `http://127.0.0.1:5173`。本地模式免登录；服务器模式需在 `.env` 设置 `WORDMASTER_AUTH_MODE=server`、`WORDMASTER_SECRET_KEY`、`WORDMASTER_SERVER_USERNAME` 和 `WORDMASTER_SERVER_PASSWORD`。
+
+## 验证
+
+- 后端全量：`cd backend; python -m pytest -q`
+- 前端全量：`cd frontend; npm test -- --run`
+- 类型与构建：`cd frontend; npm run typecheck; npm run build`
+- OpenAPI：`docs/openapi.json`
+
+Docker Compose 将前端 Nginx 的 `/api/` 代理到后端，并把 SQLite 数据保存到 `wordmaster_data` 卷；当前开发机未安装 Docker CLI，未执行容器 smoke test。
 
 ## 本地目录
 

@@ -6,9 +6,9 @@
 
 ## 当前状态
 
-- 当前阶段：认证、部署与最终验收
-- 最近完成：Task 8 实现 PWA、IndexedDB 离线队列与同步 API
-- 当前任务：执行实施计划 Task 9
+- 当前阶段：最终验收完成
+- 最近完成：Task 9 实现认证、部署代理、OpenAPI 和最终测试
+- 当前任务：等待用户验收或后续迭代
 - 阻塞问题：无
 - 最后更新：2026-09-04
 
@@ -32,7 +32,7 @@
 - 测试命令：`cd backend && python -m pytest tests/test_health.py -q`；`cd frontend && npm run build`
 - Docker 启动：`docker compose up --build`，当前机器未检测到 Docker CLI
 - 本地地址：后端 `http://127.0.0.1:8000`；前端 `http://127.0.0.1:5173`
-- 数据库迁移版本：`202609040005_sync_records`
+- 数据库迁移版本：`202609040006_auth_tokens`
 
 ## 已实现接口与页面
 
@@ -63,6 +63,8 @@
 - `POST /api/v1/sync/push`：幂等批量应用进度/设置事件，非法批次回滚并记录 LWW 冲突。
 - `GET /api/v1/sync/pull`：按同步记录 ID 游标拉取已处理事件和冲突。
 - 前端 IndexedDB 队列在网络失败时持久化学习变化，启动、联网和退避到期后自动重试；PWA 缓存应用壳并提供离线页。
+- `POST /api/v1/auth/login`、`POST /api/v1/auth/logout`：服务器模式登录和持久化撤销 Bearer Token；本地模式免登录。
+- Compose 前端 Nginx 将 `/api/` 代理到 backend，SQLite 使用 `wordmaster_data` 卷；E2E 验收步骤位于 `tests/e2e/README.md`。
 
 ## 数据模型变更
 
@@ -105,11 +107,13 @@
 
 2026-09-04：Task 8 红灯测试首次失败于缺少 `SyncRecord`，后续复现 API 依赖夹具错误、非法批次未映射 400、未知单词可创建进度和缺少 IndexedDB 队列；绿灯测试 `cd backend && python -m pytest tests/test_sync.py -q` 结果 5 passed，后端全量 56 passed；`cd frontend && npm test -- --run` 结果 7 files、9 tests passed，类型检查与生产构建成功。
 
+2026-09-04：Task 9 红灯测试首次失败于缺少安全模块，后续复现密码夹具策略和前端登录组件缺失；绿灯测试 `cd backend && python -m pytest tests/test_auth.py -q` 结果 3 passed，后端全量 59 passed；`cd frontend && npm test -- --run` 结果 8 files、10 tests passed，类型检查、生产构建、迁移升级和 OpenAPI 生成成功。Docker CLI 未安装，容器 smoke test 未执行。
+
 ## 下一步建议
 
-1. 执行 Task 9，完成认证、部署和最终验收。
-2. 生成最终 OpenAPI 并执行真实 CSV、同步与备份验收。
-3. 每个任务完成后更新本文件和 `CHANGELOG.md`。
+1. 用 `tests/e2e/README.md` 执行真实浏览器验收。
+2. 在具备 Docker CLI 的环境执行 Compose smoke test。
+3. 后续如增加业务行为，继续更新本文件、`CHANGELOG.md` 和 `DECISIONS.md`。
 
 ## AI 修改协议
 

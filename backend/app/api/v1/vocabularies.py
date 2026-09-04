@@ -1,11 +1,14 @@
 import csv
 import io
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Response, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import User, Vocabulary, Word
+from app.core.config import settings
+from app.core.security import TokenError, decode_access_token
+from app.db.models import AuthToken, User, Vocabulary, Word
 from app.db.session import get_db
 from app.schemas.vocabularies import (
     ImportResponse,
@@ -20,13 +23,27 @@ from app.services.vocabulary_import import VocabularyImportService
 router = APIRouter(tags=["vocabularies"])
 
 
-def get_current_user(db: Session = Depends(get_db)) -> User:
-    user = db.get(User, 1)
+def get_current_user(authorization: str | None = Header(default=None), db: Session = Depends(get_db)) -> User:
+    if settings.auth_mode == "local":
+        user = db.get(User, 1)
+        if user is None:
+            user = User(id=1, username="local")
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        return user
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bearer token required")
+    try:
+        payload = decode_access_token(authorization[7:])
+    except TokenError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
+    token_record = db.scalar(select(AuthToken).where(AuthToken.token_id == str(payload["jti"]), AuthToken.user_id == int(payload["sub"])))
+    if token_record is None or token_record.revoked or token_record.expires_at <= datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    user = db.get(User, int(payload["sub"]))
     if user is None:
-        user = User(id=1, username="local")
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     return user
 
 

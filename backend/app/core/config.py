@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./wordmaster.db"
     auth_mode: str = "local"
     secret_key: str = "change-me-in-production"
+    access_token_minutes: int = 60
+    server_username: str | None = None
+    server_password: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="WORDMASTER_")
 

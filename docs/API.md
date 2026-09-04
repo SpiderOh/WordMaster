@@ -4,6 +4,14 @@ API 前缀为 `/api/v1`，使用 FastAPI 自动生成 OpenAPI。目标模块包�
 
 实现每个接口后，必须补充请求/响应模型、错误示例、分页与筛选参数，并生成 `docs/openapi.json`。
 
+### `POST /api/v1/auth/login`
+
+服务器模式接收 `{ "username": "owner", "password": "..." }`，返回短期 `access_token`、`token_type` 和 `expires_in`。本地模式不开放登录接口。
+
+### `POST /api/v1/auth/logout`
+
+接收 Bearer Token 并持久化撤销对应令牌，成功返回 204。服务器模式下除健康检查、登录外的业务接口均要求 `Authorization: Bearer <token>`。
+
 ## 已实现接口
 
 ### `GET /api/v1/health`

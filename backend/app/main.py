@@ -6,12 +6,22 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.db.session import init_db
+from app.core.security import hash_password
+from app.db.models import User
+from app.db.session import SessionLocal, init_db
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     init_db()
+    if settings.auth_mode == "server":
+        if not settings.server_username or not settings.server_password:
+            raise RuntimeError("WORDMASTER_SERVER_USERNAME and WORDMASTER_SERVER_PASSWORD are required in server mode")
+        with SessionLocal() as db:
+            user = db.query(User).filter(User.username == settings.server_username).first()
+            if user is None:
+                db.add(User(username=settings.server_username, password_hash=hash_password(settings.server_password)))
+                db.commit()
     yield
 
 

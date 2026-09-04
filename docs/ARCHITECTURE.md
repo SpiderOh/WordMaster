@@ -21,6 +21,9 @@
 - `backend/app/services/vocabulary_import.py`：实现 CSV 字段映射、行级错误隔离和规范化重复词处理。
 - `backend/app/services/study_page_service.py`：实现取词顺序、跨词库跳过、页面快照、学习次数和撤销规则。
 - `backend/app/services/sync_service.py`：实现离线事件幂等、增量/LWW 合并、冲突记录和游标拉取。
+- `backend/app/core/security.py`：实现密码哈希、HMAC 令牌签发与验证。
+- `backend/app/api/v1/auth.py`：提供服务器模式登录和令牌撤销。
 - `frontend/src/App.tsx`：移动端优先的应用壳和底部导航入口。
 - `frontend/src/lib/sync/SyncQueue.ts`：原生 IndexedDB 事件队列、状态持久化和指数退避。
 - `frontend/public/service-worker.js`：缓存应用壳与静态 GET 资源，并提供离线导航回退。
+- `frontend/src/features/auth/AuthView.tsx`：提供服务器模式登录表单。
