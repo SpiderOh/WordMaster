@@ -6,8 +6,9 @@
 
 ## 当前迁移
 
-- 版本：`202609040001_initial_vocabulary`
-- 位置：`backend/migrations/versions/202609040001_initial_vocabulary.py`
+- 当前版本：`202609040002_study_pages`
+- 初始词库迁移：`backend/migrations/versions/202609040001_initial_vocabulary.py`
+- 学习页迁移：`backend/migrations/versions/202609040002_study_pages.py`
 
 ## 已实现表
 
@@ -16,9 +17,14 @@
 - `words`：词库内原始编号、英文、规范化英文、释义、原始页码和 CSV 顺序。
 - `word_progress`：用户与单词的学习状态、学习次数、遗忘次数、历史遗忘标志和推荐日期。
 - `operation_logs`：词库导入、重命名、激活/停用、优先级和删除操作的追加日志。
+- `study_pages`：用户学习页、页大小、状态、是否不足页、创建和完成时间。
+- `study_page_words`：学习页内单词顺序、加入原因、是否仍在当前未完成页。
+- `study_sessions`：每次完成本页的完成时间、增量次数、不可变页面快照和撤销时间。
+- `word_study_events`：完成学习、撤销完成和标记熟等单词级不可覆盖事件。
 
 ## 当前索引与约束
 
 - `words` 使用 `vocabulary_id + normalized_word` 唯一约束，避免同一词库重复导入同一规范化英文。
 - `word_progress` 使用 `user_id + word_id` 唯一约束，确保每个用户每个词只有一条进度。
+- `study_page_words` 使用 `page_id + word_id` 唯一约束，防止同一页面重复加入同一词。
 - 常用查询字段 `user_id`、`normalized_word`、`operation` 建有索引。

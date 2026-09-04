@@ -18,6 +18,7 @@
 - `docs/DECISIONS.md`
 
 词库样本位于 `data/reden_vocabulary_6550.csv`。该文件仅作为项目输入样本，不应被运行时直接修改。
+该样本与本机源文件 `C:\Users\zhan\Desktop\wu\output\reden_vocabulary\reden_vocabulary_6550.csv` 内容一致，SHA256 为 `3FEAA1FE5293A256C2C94BF0A1E380807CE59A2E9138DB5D50A419E628B12038`，会随仓库提交推送。
 
 开发 AI 应按 `docs/superpowers/plans/2026-09-02-english-word-memory.md` 分任务实现，每个任务先测试后编码，完成后更新留痕文档。
 

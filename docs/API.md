@@ -51,3 +51,39 @@ API 前缀为 `/api/v1`，使用 FastAPI 自动生成 OpenAPI。目标模块包�
 ### `DELETE /api/v1/vocabularies/{id}?confirm=词库名称`
 
 二次确认后软删除词库，并写入 `operation_logs`。
+
+### `GET /api/v1/study-pages/next?page_size=15`
+
+返回当前未完成学习页；如果没有未完成页，则按激活词库优先级和 CSV 原始顺序生成新页。跨词库同词跳过规则在服务层执行。词库不足时 `is_short` 为 `true`。
+
+### `GET /api/v1/study-pages/{id}`
+
+返回学习页详情、固定单词顺序、释义、词库名、原始页码、学习次数、遗忘次数和是否可标记熟。
+
+### `POST /api/v1/study-pages/{id}/words/{word_id}/master`
+
+第一次学习时标记熟词，将该词从当前未完成页移除并补入学习次数为 0 的新词。后续学习次数不为 0 时返回 400。
+
+### `POST /api/v1/study-pages/{id}/complete`
+
+请求示例：
+
+```json
+{
+  "completed_at": "2026-09-04T08:30:00+00:00"
+}
+```
+
+完成当前页，为当前页仍激活的单词学习次数加 1，写入 `study_sessions.snapshot` 和 `word_study_events`。
+
+### `POST /api/v1/study-pages/{id}/undo-complete`
+
+请求示例：
+
+```json
+{
+  "session_id": 1
+}
+```
+
+撤销最近完成记录对应的学习次数增量，追加撤销事件，并将页面恢复为未完成。

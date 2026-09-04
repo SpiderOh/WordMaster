@@ -333,6 +333,248 @@
           }
         }
       }
+    },
+    "/api/v1/study-pages/next": {
+      "get": {
+        "tags": [
+          "study-pages"
+        ],
+        "summary": "Get Next Page",
+        "operationId": "get_next_page_api_v1_study_pages_next_get",
+        "parameters": [
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 15,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyPageRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/study-pages/{page_id}": {
+      "get": {
+        "tags": [
+          "study-pages"
+        ],
+        "summary": "Get Page",
+        "operationId": "get_page_api_v1_study_pages__page_id__get",
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Page Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyPageRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/study-pages/{page_id}/words/{word_id}/master": {
+      "post": {
+        "tags": [
+          "study-pages"
+        ],
+        "summary": "Mark Word Mastered",
+        "operationId": "mark_word_mastered_api_v1_study_pages__page_id__words__word_id__master_post",
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Page Id"
+            }
+          },
+          {
+            "name": "word_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Word Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyPageRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/study-pages/{page_id}/complete": {
+      "post": {
+        "tags": [
+          "study-pages"
+        ],
+        "summary": "Complete Page",
+        "operationId": "complete_page_api_v1_study_pages__page_id__complete_post",
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Page Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompletePageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudySessionRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/study-pages/{page_id}/undo-complete": {
+      "post": {
+        "tags": [
+          "study-pages"
+        ],
+        "summary": "Undo Complete",
+        "operationId": "undo_complete_api_v1_study_pages__page_id__undo_complete_post",
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Page Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UndoCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UndoCompletionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -355,6 +597,24 @@
           "file"
         ],
         "title": "Body_import_vocabulary_api_v1_vocabularies_import_post"
+      },
+      "CompletePageRequest": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "title": "CompletePageRequest"
       },
       "HTTPValidationError": {
         "properties": {
@@ -416,6 +676,173 @@
           "message"
         ],
         "title": "RowErrorRead"
+      },
+      "StudyPageRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "page_number": {
+            "type": "integer",
+            "title": "Page Number"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "is_short": {
+            "type": "boolean",
+            "title": "Is Short"
+          },
+          "words": {
+            "items": {
+              "$ref": "#/components/schemas/StudyPageWordRead"
+            },
+            "type": "array",
+            "title": "Words"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "page_number",
+          "page_size",
+          "status",
+          "is_short",
+          "words"
+        ],
+        "title": "StudyPageRead"
+      },
+      "StudyPageWordRead": {
+        "properties": {
+          "word_id": {
+            "type": "integer",
+            "title": "Word Id"
+          },
+          "word": {
+            "type": "string",
+            "title": "Word"
+          },
+          "meaning": {
+            "type": "string",
+            "title": "Meaning"
+          },
+          "vocabulary_id": {
+            "type": "integer",
+            "title": "Vocabulary Id"
+          },
+          "vocabulary_name": {
+            "type": "string",
+            "title": "Vocabulary Name"
+          },
+          "source_page": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Page"
+          },
+          "study_count": {
+            "type": "integer",
+            "title": "Study Count"
+          },
+          "forget_count": {
+            "type": "integer",
+            "title": "Forget Count"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "display_order": {
+            "type": "integer",
+            "title": "Display Order"
+          },
+          "can_mark_mastered": {
+            "type": "boolean",
+            "title": "Can Mark Mastered"
+          }
+        },
+        "type": "object",
+        "required": [
+          "word_id",
+          "word",
+          "meaning",
+          "vocabulary_id",
+          "vocabulary_name",
+          "source_page",
+          "study_count",
+          "forget_count",
+          "status",
+          "display_order",
+          "can_mark_mastered"
+        ],
+        "title": "StudyPageWordRead"
+      },
+      "StudySessionRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "page_id": {
+            "type": "integer",
+            "title": "Page Id"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Completed At"
+          },
+          "snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Snapshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "page_id",
+          "completed_at",
+          "snapshot"
+        ],
+        "title": "StudySessionRead"
+      },
+      "UndoCompletionRequest": {
+        "properties": {
+          "session_id": {
+            "type": "integer",
+            "title": "Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id"
+        ],
+        "title": "UndoCompletionRequest"
+      },
+      "UndoCompletionResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "UndoCompletionResponse"
       },
       "ValidationError": {
         "properties": {

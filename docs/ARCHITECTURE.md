@@ -15,6 +15,10 @@
 
 - `backend/app/main.py`：创建 FastAPI 应用、CORS 中间件和 `/api/v1` 路由入口。
 - `backend/app/api/v1/health.py`：提供健康检查接口，用于本地和 Docker smoke test。
+- `backend/app/api/v1/vocabularies.py`：提供 CSV 导入和词库管理接口。
+- `backend/app/api/v1/study_pages.py`：提供学习页生成、查询、熟词替换、完成和撤销接口。
 - `backend/app/core/config.py`：集中读取环境变量，前缀为 `WORDMASTER_`。
+- `backend/app/services/vocabulary_import.py`：实现 CSV 字段映射、行级错误隔离和规范化重复词处理。
+- `backend/app/services/study_page_service.py`：实现取词顺序、跨词库跳过、页面快照、学习次数和撤销规则。
 - `frontend/src/App.tsx`：移动端优先的应用壳和底部导航入口。
 - `frontend/public/service-worker.js`：PWA service worker 占位，后续 Task 8 扩展离线缓存与同步队列。

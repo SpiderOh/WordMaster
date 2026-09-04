@@ -14,3 +14,5 @@
 - 新增 Docker Compose、前后端 Dockerfile、环境变量示例和文档入口。
 - 建立 SQLite/Alembic 初始迁移，新增词库、单词、进度和操作日志模型。
 - 实现 CSV 词库导入、行级错误报告、规范化重复词跳过和词库管理 API。
+- 实现学习页生成、未完成页复用、跨词库跳过、熟词即时替换、完成页快照和撤销完成。
+- 确认外部词库 `C:\Users\zhan\Desktop\wu\output\reden_vocabulary\reden_vocabulary_6550.csv` 与仓库 `data/reden_vocabulary_6550.csv` SHA256 一致。
