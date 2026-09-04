@@ -187,3 +187,21 @@ class WordStudyEvent(Base):
     event_type: Mapped[str] = mapped_column(String(80), index=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now, index=True)
     delta: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
+
+
+class SyncRecord(Base):
+    __tablename__ = "sync_records"
+    __table_args__ = (UniqueConstraint("user_id", "event_id", name="uq_sync_records_user_event"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    event_id: Mapped[str] = mapped_column(String(120))
+    device_id: Mapped[str] = mapped_column(String(120), index=True)
+    client_timestamp: Mapped[datetime] = mapped_column(UTCDateTime())
+    server_timestamp: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now, index=True)
+    entity_type: Mapped[str] = mapped_column(String(80), index=True)
+    entity_id: Mapped[str] = mapped_column(String(120))
+    operation: Mapped[str] = mapped_column(String(80))
+    changes: Mapped[dict[str, object]] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(32), index=True)
+    conflict: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)

@@ -145,3 +145,13 @@ API 前缀为 `/api/v1`，使用 FastAPI 自动生成 OpenAPI。目标模块包�
 ### `GET /api/v1/vocabularies/{id}/export`
 
 按原 CSV 顺序导出 `number,word,meaning,source_page`，保留释义换行。
+
+### `POST /api/v1/sync/push`
+
+批量接收离线事件。事件包含唯一事件 ID、设备 ID、客户端时间、实体类型/ID、操作和变更。返回每条事件的 `applied`、`duplicate` 或 `conflict` 状态；非法事件使整个批次回滚并返回 400。
+
+当前支持 `word_progress` 的非负学习/遗忘次数增量和状态合并，以及 `user_settings` 的最后修改时间合并。单词必须属于当前用户。
+
+### `GET /api/v1/sync/pull?cursor=0`
+
+按服务器同步记录 ID 增量返回事件、处理状态、服务器时间和冲突详情，同时返回下一游标。无新事件时保持传入游标。

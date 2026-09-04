@@ -6,9 +6,9 @@
 
 ## 当前状态
 
-- 当前阶段：PWA、IndexedDB 与同步 API
-- 最近完成：Task 7 实现学习、日期、遗忘、统计和设置前端
-- 当前任务：执行实施计划 Task 8
+- 当前阶段：认证、部署与最终验收
+- 最近完成：Task 8 实现 PWA、IndexedDB 离线队列与同步 API
+- 当前任务：执行实施计划 Task 9
 - 阻塞问题：无
 - 最后更新：2026-09-04
 
@@ -32,7 +32,7 @@
 - 测试命令：`cd backend && python -m pytest tests/test_health.py -q`；`cd frontend && npm run build`
 - Docker 启动：`docker compose up --build`，当前机器未检测到 Docker CLI
 - 本地地址：后端 `http://127.0.0.1:8000`；前端 `http://127.0.0.1:5173`
-- 数据库迁移版本：`202609040004_user_settings`
+- 数据库迁移版本：`202609040005_sync_records`
 
 ## 已实现接口与页面
 
@@ -60,6 +60,9 @@
 - 普通学习支持释义显隐、首次标熟、即时遗忘、完成确认和完成后自动续页。
 - 日期页显示空白、推荐、已完成三态与后续轮次，并支持左右滑动切换日期。
 - 遗忘页支持搜索、词库/状态筛选、导出、批量选词和专攻页三种逐词结果。
+- `POST /api/v1/sync/push`：幂等批量应用进度/设置事件，非法批次回滚并记录 LWW 冲突。
+- `GET /api/v1/sync/pull`：按同步记录 ID 游标拉取已处理事件和冲突。
+- 前端 IndexedDB 队列在网络失败时持久化学习变化，启动、联网和退避到期后自动重试；PWA 缓存应用壳并提供离线页。
 
 ## 数据模型变更
 
@@ -76,6 +79,7 @@
 - 专攻集合由 `word_progress.needs_special_attention` 独立维护，不覆盖历史遗忘事件或遗忘次数。
 - 今日再次遗忘按“今天有有效遗忘且此前已有有效遗忘”的单词计数；同词一天多次只占一个明细。
 - JSON 备份导入先验证所有引用，再事务替换当前用户数据，失败完整回滚。
+- 同步事件以 `user_id + event_id` 幂等；计数按非负增量合并，状态与设置按客户端时间 LWW；push 批次原子提交。
 
 ## 最近测试结果
 
@@ -99,10 +103,12 @@
 
 2026-09-04：Task 7 依次以失败测试复现缺少学习页组件、历史页组件、五入口导航、完成后续页、遗忘筛选与专攻选择、专攻逐词结果和日期滑动；绿灯测试 `cd frontend && npm test -- --run` 结果 6 files、7 tests passed；`npm run typecheck` 与 `npm run build` 均成功。
 
+2026-09-04：Task 8 红灯测试首次失败于缺少 `SyncRecord`，后续复现 API 依赖夹具错误、非法批次未映射 400、未知单词可创建进度和缺少 IndexedDB 队列；绿灯测试 `cd backend && python -m pytest tests/test_sync.py -q` 结果 5 passed，后端全量 56 passed；`cd frontend && npm test -- --run` 结果 7 files、9 tests passed，类型检查与生产构建成功。
+
 ## 下一步建议
 
-1. 执行 Task 8，完成 PWA 离线队列与同步 API。
-2. 执行 Task 9，完成认证、部署和最终验收。
+1. 执行 Task 9，完成认证、部署和最终验收。
+2. 生成最终 OpenAPI 并执行真实 CSV、同步与备份验收。
 3. 每个任务完成后更新本文件和 `CHANGELOG.md`。
 
 ## AI 修改协议

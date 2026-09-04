@@ -3,6 +3,7 @@
 :root[data-font-size="small"] { font-size: 14px; } :root[data-font-size="large"] { font-size: 18px; }
 * { box-sizing: border-box; } body { margin: 0; min-width: 320px; min-height: 100vh; background: inherit; color: var(--ink); } button, input, select { font: inherit; } button, a { -webkit-tap-highlight-color: transparent; }
 .app-shell { min-height: 100vh; padding: 18px 14px 88px; } .workspace { width: min(820px, 100%); margin: 0 auto; }
+.sync-status { position: sticky; z-index: 9; top: 8px; display: flex; width: max-content; max-width: 100%; align-items: center; gap: 7px; margin: 0 auto 8px; padding: 7px 10px; border: 1px solid var(--gold); border-radius: 6px; color: var(--gold); background: var(--surface); font-size: .78rem; box-shadow: var(--shadow); }
 .view-header { display: flex; min-height: 66px; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; } .eyebrow { margin: 0 0 4px; color: var(--brand); font-size: .78rem; font-weight: 750; } h1 { margin: 0; font-size: 1.7rem; line-height: 1.15; letter-spacing: 0; } h2 { font-size: 1.2rem; letter-spacing: 0; }
 .page-count { min-width: 58px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .word-list { border-block: 1px solid var(--line); } .word-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; min-height: 64px; border-bottom: 1px solid var(--line); background: var(--surface); } .word-row:last-child { border-bottom: 0; }

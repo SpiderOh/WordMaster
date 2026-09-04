@@ -1,9 +1,12 @@
 {
   "name": "WordMaster",
   "short_name": "WordMaster",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "description": "离线可用的英语单词学习与复习工具",
   "background_color": "#f7f7f2",
   "theme_color": "#1f6f68",
-  "icons": []
+  "icons": [{ "src": "/wordmaster-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }
