@@ -3,11 +3,13 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+*.egg-info/
 
 # Node
 node_modules/
 dist/
 .vite/
+*.tsbuildinfo
 
 # Local data and secrets
 .env
@@ -22,4 +24,3 @@ data/backups/
 Thumbs.db
 .idea/
 .vscode/
-
