@@ -6,9 +6,9 @@
 
 ## 当前状态
 
-- 当前阶段：统计、设置与备份恢复
-- 最近完成：Task 6 实现统计、设置、JSON 备份恢复和词库 CSV 导出
-- 当前任务：执行实施计划 Task 7
+- 当前阶段：PWA、IndexedDB 与同步 API
+- 最近完成：Task 7 实现学习、日期、遗忘、统计和设置前端
+- 当前任务：执行实施计划 Task 8
 - 阻塞问题：无
 - 最后更新：2026-09-04
 
@@ -56,6 +56,10 @@
 - `GET/PUT /api/v1/settings`：页大小、推荐间隔、主题、字号和词库优先级。
 - `GET/POST /api/v1/backup/json`：版本化完整备份与事务恢复。
 - `GET /api/v1/vocabularies/{id}/export`：保留源字段和释义换行的词库 CSV。
+- 前端提供学习、日期、遗忘、统计、设置五个移动端入口，API 客户端统一映射 `/api/v1`。
+- 普通学习支持释义显隐、首次标熟、即时遗忘、完成确认和完成后自动续页。
+- 日期页显示空白、推荐、已完成三态与后续轮次，并支持左右滑动切换日期。
+- 遗忘页支持搜索、词库/状态筛选、导出、批量选词和专攻页三种逐词结果。
 
 ## 数据模型变更
 
@@ -93,10 +97,12 @@
 
 2026-09-04：Task 6 红灯测试首次失败于 `ModuleNotFoundError: No module named 'app.services.stats_service'`，后续依次复现设置与统计 API 404、备份 API 404、词库导出 404、再次遗忘定义和专攻学习计数；绿灯测试 `cd backend && python -m pytest tests/test_stats_backup.py -q` 结果 7 passed。
 
+2026-09-04：Task 7 依次以失败测试复现缺少学习页组件、历史页组件、五入口导航、完成后续页、遗忘筛选与专攻选择、专攻逐词结果和日期滑动；绿灯测试 `cd frontend && npm test -- --run` 结果 6 files、7 tests passed；`npm run typecheck` 与 `npm run build` 均成功。
+
 ## 下一步建议
 
-1. 执行 Task 7，完成学习、日期、遗忘和统计前端界面。
-2. 执行 Task 8，完成 PWA 离线队列与同步 API。
+1. 执行 Task 8，完成 PWA 离线队列与同步 API。
+2. 执行 Task 9，完成认证、部署和最终验收。
 3. 每个任务完成后更新本文件和 `CHANGELOG.md`。
 
 ## AI 修改协议
