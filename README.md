@@ -53,7 +53,7 @@ npm run dev
 ## 验证
 
 - 后端全量：`cd backend; python -m pytest -q`
-- 前端全量：`cd frontend; npm test -- --run`
+- 前端全量：`cd frontend; npm test`
 - 类型与构建：`cd frontend; npm run typecheck; npm run build`
 - OpenAPI：`docs/openapi.json`
 
