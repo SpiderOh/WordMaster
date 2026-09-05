@@ -2,10 +2,29 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1f6f68" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#20695a" />
+    <meta name="description" content="WordMaster 移动端英语记单词" />
+    <link rel="icon" href="/wordmaster-icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/wordmaster-icon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <title>WordMaster</title>
+    <title>WordMaster 记单词</title>
+    <script>
+      // 首屏绘制前应用本地外观偏好，避免主题与字号闪烁
+      (function () {
+        try {
+          var raw = localStorage.getItem('wordmaster-appearance');
+          var appearance = raw ? JSON.parse(raw) : { theme: 'system', font_size: 'medium' };
+          var theme = appearance.theme === 'system'
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : appearance.theme;
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.dataset.fontSize = appearance.font_size || 'medium';
+        } catch (error) {
+          /* 忽略本地存储不可用的情况 */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
