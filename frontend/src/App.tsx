@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { AppRoutes } from './app/router';
 import { SyncStatus } from './features/sync/SyncStatus';
+import { syncEngine } from './lib/sync/syncEngine';
 
 const NAV_ITEMS = [
   { to: '/', label: '学习' },
@@ -11,6 +13,10 @@ const NAV_ITEMS = [
 ];
 
 export default function App() {
+  useEffect(() => {
+    syncEngine.startAutoSync();
+  }, []);
+
   return (
     <div className="app-shell">
       <header className="app-header">

@@ -1,0 +1,25 @@
+{
+  "name": "WordMaster 记单词",
+  "short_name": "WordMaster",
+  "description": "移动端优先的英语记单词 PWA：CSV 词库、整页记录、日期历史与离线同步",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f5f4",
+  "theme_color": "#20695a",
+  "icons": [
+    {
+      "src": "/wordmaster-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/wordmaster-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

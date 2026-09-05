@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { apiClient, ApiError } from '../../lib/apiClient';
+import { ApiError, apiClient, isNetworkError } from '../../lib/apiClient';
+import { enqueueApiReplay, enqueueSyncEvent } from '../../lib/offline/outbox';
 import type { StudyPage, StudyPageWord } from '../../lib/types';
 
 type PageState =
@@ -10,6 +11,7 @@ type PageState =
   | { phase: 'ready'; page: StudyPage };
 
 interface CompletionToast {
+  // sessionId 为 0 表示离线记录，服务端尚未生成学习会话
   sessionId: number;
 }
 
@@ -18,6 +20,7 @@ export function LearningPage() {
   const [revealed, setRevealed] = useState<ReadonlySet<number>>(new Set());
   const [confirming, setConfirming] = useState(false);
   const [completion, setCompletion] = useState<CompletionToast | null>(null);
+  const [offlineNotice, setOfflineNotice] = useState<string | null>(null);
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const errorTimer = useRef<number | null>(null);
 
@@ -92,6 +95,16 @@ export function LearningPage() {
         const progress = await apiClient.markWordForgotten(state.page.id, word.word_id);
         applyProgress(word.word_id, progress);
       } catch (error) {
+        if (isNetworkError(error)) {
+          await enqueueSyncEvent('forget', String(word.word_id), { forget_count_delta: 1 });
+          applyProgress(word.word_id, {
+            status: word.status,
+            study_count: word.study_count,
+            forget_count: word.forget_count + 1,
+          });
+          setOfflineNotice('当前离线：遗忘已记录，联网后自动同步');
+          return;
+        }
         showToast(error instanceof Error ? `遗忘失败：${error.message}` : '遗忘失败');
       }
     },
@@ -108,6 +121,20 @@ export function LearningPage() {
         setRevealed(new Set());
         setState({ phase: 'ready', page });
       } catch (error) {
+        if (isNetworkError(error)) {
+          await enqueueApiReplay('POST', `/study-pages/${state.page.id}/words/${word.word_id}/master`);
+          setState((current) => {
+            if (current.phase !== 'ready') {
+              return current;
+            }
+            return {
+              ...current,
+              page: { ...current.page, words: current.page.words.filter((item) => item.word_id !== word.word_id) },
+            };
+          });
+          setOfflineNotice('当前离线：标熟已记录，联网后自动补词');
+          return;
+        }
         showToast(error instanceof Error ? `标熟失败：${error.message}` : '标熟失败');
       }
     },
@@ -123,7 +150,15 @@ export function LearningPage() {
       setCompletion({ sessionId: session.id });
       setState({ phase: 'ready', page: { ...state.page, status: 'completed' } });
     } catch (error) {
-      showToast(error instanceof Error ? `完成失败：${error.message}` : '完成失败');
+      if (isNetworkError(error)) {
+        await enqueueApiReplay('POST', `/study-pages/${state.page.id}/complete`, {
+          completed_at: new Date().toISOString(),
+        });
+        setCompletion({ sessionId: 0 });
+        setState({ phase: 'ready', page: { ...state.page, status: 'completed' } });
+      } else {
+        showToast(error instanceof Error ? `完成失败：${error.message}` : '完成失败');
+      }
     } finally {
       setConfirming(false);
     }
@@ -133,6 +168,10 @@ export function LearningPage() {
     if (state.phase !== 'ready' || completion === null) {
       return;
     }
+    if (completion.sessionId === 0) {
+      showToast('离线记录的完成无法撤销，需联网后重试');
+      return;
+    }
     try {
       await apiClient.undoPageCompletion(state.page.id, completion.sessionId);
       const page = await apiClient.getStudyPage(state.page.id);
@@ -140,6 +179,10 @@ export function LearningPage() {
       setState({ phase: 'ready', page });
     } catch (error) {
       setCompletion(null);
+      if (isNetworkError(error)) {
+        showToast('撤销需要联网后重试');
+        return;
+      }
       showToast(error instanceof Error ? `撤销失败：${error.message}` : '撤销失败');
     }
   }, [state, completion, showToast]);
@@ -195,6 +238,11 @@ export function LearningPage() {
 
       {state.phase === 'ready' && (
         <>
+          {offlineNotice !== null && (
+            <div className="banner banner--info" role="status">
+              {offlineNotice}
+            </div>
+          )}
           {state.page.is_short && <div className="banner banner--warn">词库接近学完，本页仅 {state.page.words.length} 词</div>}
           {state.page.status === 'exhausted' && (
             <div className="banner banner--info">
@@ -283,10 +331,12 @@ export function LearningPage() {
 
       {completion !== null && (
         <div className="toast" role="status">
-          <span>本页已完成，未熟词学习次数 +1</span>
-          <button type="button" className="btn btn--small" onClick={() => void handleUndo()}>
-            撤销
-          </button>
+          <span>{completion.sessionId === 0 ? '当前离线：本页完成已记录，联网后自动同步' : '本页已完成，未熟词学习次数 +1'}</span>
+          {completion.sessionId !== 0 && (
+            <button type="button" className="btn btn--small" onClick={() => void handleUndo()}>
+              撤销
+            </button>
+          )}
           <button type="button" className="btn btn--small" onClick={() => void load()}>
             下一页
           </button>

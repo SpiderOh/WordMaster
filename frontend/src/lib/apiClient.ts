@@ -151,6 +151,15 @@ export function vocabularyExportUrl(vocabularyId: number): string {
   return `${BASE_URL}${API_PREFIX}/vocabularies/${vocabularyId}/export`;
 }
 
+export function isNetworkError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'kind' in error &&
+    (error as { kind?: unknown }).kind === 'network'
+  );
+}
+
 export const apiClient = {
   health(): Promise<{ status: string; version: string }> {
     return request('GET', '/health');
@@ -295,5 +304,13 @@ export const apiClient = {
   },
   pullSyncEvents(cursor: number): Promise<SyncPullResponse> {
     return request('GET', '/sync/pull', { query: { cursor } });
+  },
+
+  // ---- 离线重放 ----
+  replayRequest(method: string, path: string, body?: unknown): Promise<unknown> {
+    if (method === 'GET' || body === undefined) {
+      return request(method, path);
+    }
+    return request(method, path, { json: body });
   },
 };

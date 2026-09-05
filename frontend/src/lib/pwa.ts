@@ -3,9 +3,13 @@ export function registerServiceWorker(): void {
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
     return;
   }
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').catch(() => {
-      /* 注册失败时应用仍可在线使用 */
-    });
-  });
+  window.addEventListener(
+    'load',
+    () => {
+      navigator.serviceWorker.register('/service-worker.js').catch(() => {
+        /* 注册失败时应用仍可在线使用 */
+      });
+    },
+    { once: true },
+  );
 }
