@@ -107,13 +107,13 @@ export function SpecialLearningPage() {
           <ol className="word-list">
             {state.page.words.map((word: StudyPageWord) => (
               <li key={word.word_id} className="word-row word-row--static">
-                <span className="word-row__meaning">{word.meaning}</span>
                 <span className="word-row__main">
                   <span className="word-row__word">{word.word}</span>
                   <span className="word-row__meta">
-                    {word.vocabulary_name} · 学 {word.study_count} 次 · 忘 {word.forget_count} 次
+                    学 {word.study_count} · 忘 {word.forget_count}
                   </span>
                 </span>
+                <span className="word-row__meaning">{word.meaning}</span>
                 <span className="word-row__actions outcome-group" role="group" aria-label={`${word.word} 的结果`}>
                   {OUTCOME_OPTIONS.map((option) => (
                     <button

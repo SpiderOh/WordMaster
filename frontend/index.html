@@ -14,12 +14,15 @@
       (function () {
         try {
           var raw = localStorage.getItem('wordmaster-appearance');
-          var appearance = raw ? JSON.parse(raw) : { theme: 'system', font_size: 'medium' };
+          var appearance = raw ? JSON.parse(raw) : { theme: 'system', font_size: 'medium', accent: 'green' };
           var theme = appearance.theme === 'system'
             ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
             : appearance.theme;
+          var accents = ['green', 'blue', 'purple', 'orange', 'rose'];
+          var accent = accents.indexOf(appearance.accent) >= 0 ? appearance.accent : 'green';
           document.documentElement.dataset.theme = theme;
           document.documentElement.dataset.fontSize = appearance.font_size || 'medium';
+          document.documentElement.dataset.accent = accent;
         } catch (error) {
           /* 忽略本地存储不可用的情况 */
         }

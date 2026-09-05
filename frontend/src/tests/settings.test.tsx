@@ -94,6 +94,21 @@ describe('设置页', () => {
     expect(document.documentElement.dataset.fontSize).toBe('large');
   });
 
+  it('主题颜色色板即时应用并持久化，保存设置不丢色', async () => {
+    const user = userEvent.setup();
+    renderSettings();
+    const blue = await screen.findByRole('radio', { name: '靛蓝' });
+    await user.click(blue);
+    expect(blue).toHaveAttribute('aria-checked', 'true');
+    expect(document.documentElement.dataset.accent).toBe('blue');
+    const stored = JSON.parse(localStorage.getItem('wordmaster-appearance') as string);
+    expect(stored.accent).toBe('blue');
+    // 保存设置后主题颜色保持不变
+    await user.click(screen.getByRole('button', { name: '保存设置' }));
+    await waitFor(() => expect(apiClient.updateSettings).toHaveBeenCalled());
+    expect(document.documentElement.dataset.accent).toBe('blue');
+  });
+
   it('保存时提交修改后的词库优先级', async () => {
     const user = userEvent.setup();
     renderSettings();

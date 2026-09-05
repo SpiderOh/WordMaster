@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { applyAppearance } from '../../lib/appearance';
+import { ACCENT_PRESETS, applyAppearance, readStoredAppearance } from '../../lib/appearance';
 import { apiClient, clearAuthToken, getAuthToken } from '../../lib/apiClient';
 import { downloadJson } from '../../lib/download';
 import type { AppSettings, FontSizePreference, ThemePreference, Vocabulary } from '../../lib/types';
@@ -26,6 +26,7 @@ export function SettingsView() {
   const [hasToken, setHasToken] = useState<boolean>(() => getAuthToken() !== null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [accent, setAccent] = useState<string>(() => readStoredAppearance().accent);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,6 +71,15 @@ export function SettingsView() {
     (fontSize: FontSizePreference) => {
       setSettings((current) => (current === null ? current : { ...current, font_size: fontSize }));
       applyAppearance((settings?.theme ?? 'system') as ThemePreference, fontSize);
+    },
+    [settings],
+  );
+
+  const handleAccent = useCallback(
+    (nextAccent: string) => {
+      setAccent(nextAccent);
+      const stored = readStoredAppearance();
+      applyAppearance(settings?.theme ?? stored.theme, settings?.font_size ?? stored.font_size, nextAccent);
     },
     [settings],
   );
@@ -240,6 +250,26 @@ export function SettingsView() {
             <option value="medium">中</option>
             <option value="large">大</option>
           </select>
+        </div>
+        <div className="field">
+          <span className="field__label" id="accent-label">
+            主题颜色
+          </span>
+          <div className="accent-row" role="radiogroup" aria-labelledby="accent-label">
+            {ACCENT_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                role="radio"
+                aria-checked={accent === preset.id}
+                className={`accent-swatch accent-swatch--${preset.id}${accent === preset.id ? ' is-selected' : ''}`}
+                onClick={() => handleAccent(preset.id)}
+              >
+                <span className="accent-swatch__dot" aria-hidden="true" />
+                {preset.label}
+              </button>
+            ))}
+          </div>
         </div>
         <button type="button" className="btn" onClick={() => void handleSave()}>
           保存设置

@@ -102,11 +102,13 @@ describe('学习页', () => {
     expect(apiClient.getSettings).toHaveBeenCalledTimes(1);
     expect(apiClient.getNextStudyPage).toHaveBeenCalledWith(15);
     expect(screen.getByText(/第 2 页/)).toBeInTheDocument();
-    expect(within(rows[0]).getByText(/六级词库/)).toBeInTheDocument();
     expect(within(rows[0]).getByText(/panorama/)).toBeInTheDocument();
+    // 简洁模式：行内不展示词库名与源页
+    expect(within(rows[0]).queryByText(/六级词库/)).not.toBeInTheDocument();
+    expect(within(rows[0]).queryByText(/源页/)).not.toBeInTheDocument();
   });
 
-  it('点击单词行后在单词左侧显示释义，默认隐藏', async () => {
+  it('点击单词行后在单词右侧显示释义，默认不显示', async () => {
     const user = userEvent.setup();
     renderLearning();
     const rows = await screen.findAllByRole('listitem');
@@ -115,7 +117,7 @@ describe('学习页', () => {
     const meaning = within(rows[0]).getByText('n. 全景,全景图;全貌,概述');
     const word = within(rows[0]).getByText('panorama');
     expect(meaning).toHaveClass('word-row__meaning');
-    expect(meaning.compareDocumentPosition(word) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(word.compareDocumentPosition(meaning) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('第一次学习的词显示熟和遗忘按钮', async () => {
@@ -125,7 +127,7 @@ describe('学习页', () => {
     expect(within(rows[0]).getByRole('button', { name: '遗忘' })).toBeInTheDocument();
   });
 
-  it('非首次学习的词隐藏熟按钮，只允许遗忘', async () => {
+  it('非首次学习的词隐藏熟按钮，只允许遗忘，并显示学习次数', async () => {
     apiClient.getNextStudyPage.mockResolvedValue(
       makePage({ words: [makeWord({ study_count: 2, status: 'learning', can_mark_mastered: false })] }),
     );
@@ -133,6 +135,8 @@ describe('学习页', () => {
     const row = await screen.findByRole('listitem');
     expect(within(row).queryByRole('button', { name: '熟' })).not.toBeInTheDocument();
     expect(within(row).getByRole('button', { name: '遗忘' })).toBeInTheDocument();
+    expect(within(row).getByText(/学 2/)).toBeInTheDocument();
+    expect(within(row).queryByText(/忘 \d/)).not.toBeInTheDocument();
   });
 
   it('标记熟后用服务端返回的页面整体替换，补入新词', async () => {
@@ -149,11 +153,11 @@ describe('学习页', () => {
     expect(screen.queryByText('panorama')).not.toBeInTheDocument();
   });
 
-  it('遗忘后立即更新该行的遗忘次数', async () => {
+  it('遗忘后立即更新该行的遗忘次数，全零时不显示计数', async () => {
     const user = userEvent.setup();
     renderLearning();
     const row = (await screen.findAllByRole('listitem'))[0];
-    expect(within(row).getByText(/忘 0/)).toBeInTheDocument();
+    expect(within(row).queryByText(/忘 \d/)).not.toBeInTheDocument();
     await user.click(within(row).getByRole('button', { name: '遗忘' }));
     await waitFor(() => expect(within(row).getByText(/忘 1/)).toBeInTheDocument());
     expect(apiClient.markWordForgotten).toHaveBeenCalledWith(3, 1);

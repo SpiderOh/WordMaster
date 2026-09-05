@@ -57,18 +57,18 @@
 - `GET/POST /api/v1/backup/json`：版本化完整备份与事务恢复。
 - `GET /api/v1/vocabularies/{id}/export`：保留源字段和释义换行的词库 CSV。
 - 前端提供学习、日期、遗忘、统计、设置五个移动端入口与专攻页、词库管理二级页；`src/lib/apiClient.ts` 统一映射 `/api/v1` 并携带 Bearer Token。
-- 学习页：释义默认掩码、点击行后在单词左侧显示释义；首次学习显示“熟”、任意时刻可“遗忘”；“完成本页”二次确认后可撤销（5 分钟窗口）并可点“下一页”；离线时遗忘走同步事件、标熟/完成走 API 重放队列并乐观更新。
+- 学习页：释义默认隐藏、点击行后在单词右侧显示；行内信息极简（无词库名/源页/掩码占位，学习/遗忘次数仅非零时小字显示）；首次学习显示“熟”、任意时刻可“遗忘”；“完成本页”二次确认后可撤销（5 分钟窗口）并可点“下一页”；离线时遗忘走同步事件、标熟/完成走 API 重放队列并乐观更新。
 - 日期页：整月日历以灰色/浅色推荐/深色完成三态渲染，展示第 k 次学习、第二/第三次完成与待完成轮次；快照弹窗支持前后会话切换；支持左右滑动与前后一天按钮切换日期。
 - 遗忘页：按服务端遗忘次数降序渲染，支持搜索（防抖）、词库/状态/最近遗忘自筛选、CSV 导出、撤销遗忘（成功后刷新）、批量勾选生成专攻页并自动跳转。
 - 专攻页：逐词选择记得/遗忘/熟，未选齐禁止提交，完成后返回遗忘列表。
 - 统计页：今日学习/遗忘/再次遗忘（可展开明细）/连续学习天数与累计学习、学习中、熟词、遗忘词卡片，数据全部来自服务端。
-- 设置页：页大小、推荐间隔、主题、字号、词库优先级（显示词库名）保存到服务端；主题与字号即时应用到 `<html>` 并持久化到 localStorage；提供服务器模式登录/退出与 JSON 备份导出/导入。
+- 设置页：页大小、推荐间隔、主题、字号、词库优先级（显示词库名）保存到服务端；主题与字号即时应用到 `<html>` 并持久化到 localStorage；主题颜色提供墨绿/靛蓝/青紫/暖橙/玫红五种预设（`data-accent` + CSS 变量，深浅色各自适配，仅存本地）；提供服务器模式登录/退出与 JSON 备份导出/导入。
 - 词库管理页：CSV 导入（展示导入统计与行级错误）、激活/停用、优先级、重命名、导出与按名称确认删除。
 - `POST /api/v1/sync/push`：幂等批量应用进度/设置事件，非法批次回滚并记录 LWW 冲突。
 - `GET /api/v1/sync/pull`：按同步记录 ID 游标拉取已处理事件和冲突。
 - 前端 IndexedDB（`wordmaster-offline`）持久化 API 重放与同步事件两类队列：遗忘为 `forget_count_delta` 增量事件；标熟、完成本页为原始 API 重放；撤销完成/撤销遗忘及专攻完成需联网。同步引擎按 FIFO 重放，网络失败保留队列并按 2 秒起步指数退避（封顶 60 秒）重试，联网时自动触发；applied/duplicate 移除，conflict 与被拒绝的重放记录到冲突列表；顶栏显示“待同步/同步冲突/离线”徽标。
 - PWA：`manifest.webmanifest` + 应用壳缓存 Service Worker（静态资源缓存优先、导航回退 `offline.html`、`/api/` 不缓存）。
-- 前端测试位置：`frontend/src/tests/`（navigation、api-client、learning、learning-offline、calendar、history、forgotten、special-learning、stats、settings、vocabularies、outbox、sync-engine、sync-status、pwa，共 15 个文件、100 个用例）。
+- 前端测试位置：`frontend/src/tests/`（navigation、api-client、learning、learning-offline、calendar、history、forgotten、special-learning、stats、settings、vocabularies、appearance、outbox、sync-engine、sync-status、pwa，共 16 个文件、106 个用例）。
 - `POST /api/v1/auth/login`、`POST /api/v1/auth/logout`：服务器模式登录和持久化撤销 Bearer Token；本地模式免登录。
 - Compose 前端 Nginx 将 `/api/` 代理到 backend，SQLite 使用 `wordmaster_data` 卷；E2E 验收步骤位于 `tests/e2e/README.md`。
 - 应用首次启动自动导入并启用 `data/reden_vocabulary_6550.csv`；实机验证返回 6547 个有效词并可直接生成学习页。可用 `WORDMASTER_DEFAULT_VOCABULARY_PATH` 覆盖路径。

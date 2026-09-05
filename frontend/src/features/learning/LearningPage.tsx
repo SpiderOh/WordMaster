@@ -257,18 +257,25 @@ export function LearningPage() {
             {state.page.words.map((word) => {
               const isRevealed = revealed.has(word.word_id);
               const actionable = state.page.status === 'in_progress';
+              // 简洁模式：仅在学习/遗忘发生过后展示计数
+              const metaParts: string[] = [];
+              if (word.study_count > 0) {
+                metaParts.push(`学 ${word.study_count}`);
+              }
+              if (word.forget_count > 0) {
+                metaParts.push(`忘 ${word.forget_count}`);
+              }
+              if (word.status === 'mastered') {
+                metaParts.push('已熟');
+              }
+              const metaText = metaParts.join(' · ');
               return (
                 <li key={word.word_id} className="word-row" onClick={() => toggleReveal(word.word_id)}>
-                  <span className={`word-row__meaning${isRevealed ? '' : ' word-row__meaning--hidden'}`} aria-hidden={!isRevealed}>
-                    {isRevealed ? word.meaning : '?????'}
-                  </span>
                   <span className="word-row__main">
                     <span className="word-row__word">{word.word}</span>
-                    <span className="word-row__meta">
-                      {word.vocabulary_name} · 源页 {word.source_page ?? '—'} · 学 {word.study_count} 次 · 忘 {word.forget_count} 次
-                      {word.status === 'mastered' && ' · 已熟'}
-                    </span>
+                    {metaText && <span className="word-row__meta">{metaText}</span>}
                   </span>
+                  {isRevealed && <span className="word-row__meaning">{word.meaning}</span>}
                   <span className="word-row__actions">
                     {actionable && (
                       <>
