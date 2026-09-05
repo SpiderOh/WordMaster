@@ -353,6 +353,51 @@ body {
   background: linear-gradient(to top, var(--color-bg) 70%, transparent);
 }
 
+.forgotten-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.forgotten-card__select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.forgotten-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.forgotten-footer__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.word-row--static {
+  cursor: default;
+}
+
+.outcome-group {
+  flex-direction: row;
+}
+
+.outcome-group .btn.is-selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.outcome-group .btn:not(.is-selected) {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
 /* ============ 日历 ============ */
 .calendar__toolbar {
   display: flex;

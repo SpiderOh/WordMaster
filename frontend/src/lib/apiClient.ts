@@ -1,4 +1,4 @@
-// 统一的 /api/v1 客户端：路由只做参数转换，不在此处推导业务数据
+﻿// 统一的 /api/v1 客户端：路由只做参数转换，不在此处推导业务数据
 import type {
   AppSettings,
   CalendarSummary,
@@ -143,6 +143,14 @@ async function request<T>(
   return (await response.json()) as T;
 }
 
+export function forgottenExportUrl(): string {
+  return `${BASE_URL}${API_PREFIX}/forgotten-words/export`;
+}
+
+export function vocabularyExportUrl(vocabularyId: number): string {
+  return `${BASE_URL}${API_PREFIX}/vocabularies/${vocabularyId}/export`;
+}
+
 export const apiClient = {
   health(): Promise<{ status: string; version: string }> {
     return request('GET', '/health');
@@ -191,10 +199,6 @@ export const apiClient = {
   async deleteVocabulary(vocabularyId: number, confirmName: string): Promise<void> {
     await request('DELETE', `/vocabularies/${vocabularyId}${toQuery({ confirm: confirmName })}`);
   },
-  vocabularyExportUrl(vocabularyId: number): string {
-    return `${BASE_URL}${API_PREFIX}/vocabularies/${vocabularyId}/export`;
-  },
-
   // ---- 学习页 ----
   getNextStudyPage(pageSize?: number): Promise<StudyPage> {
     return request('GET', '/study-pages/next', { query: { page_size: pageSize } });
@@ -251,9 +255,6 @@ export const apiClient = {
   },
   undoForgetting(wordId: number): Promise<WordProgress> {
     return request('POST', `/forgotten-words/${wordId}/undo`);
-  },
-  forgottenExportUrl(): string {
-    return `${BASE_URL}${API_PREFIX}/forgotten-words/export`;
   },
 
   // ---- 历史 ----
