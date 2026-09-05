@@ -354,6 +354,51 @@ body {
 }
 
 /* ============ 日历 ============ */
+.calendar__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.page-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-card__title {
+  font-weight: 650;
+  margin-bottom: 0.3rem;
+}
+
+.history-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.4rem;
+}
+
+.snapshot-list {
+  list-style: none;
+  margin: 0.6rem 0;
+  padding: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.snapshot-list__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.snapshot-list__item:last-child {
+  border-bottom: none;
+}
+
 .calendar {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
