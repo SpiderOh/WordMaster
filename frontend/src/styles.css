@@ -568,6 +568,22 @@ body {
   font-size: 0.92rem;
 }
 
+.card__title {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+}
+
+.vocabulary-card__row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.import-result {
+  margin-top: 0.6rem;
+}
+
 .filter-bar {
   position: sticky;
   top: var(--header-height);
