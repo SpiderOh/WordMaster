@@ -24,3 +24,6 @@ data/backups/
 Thumbs.db
 .idea/
 .vscode/
+
+# Local Codex worktrees
+.worktrees/
