@@ -6,11 +6,11 @@
 
 ## 当前状态
 
-- 当前阶段：前端已完全重写并通过全量测试
-- 最近完成：Task 9 认证部署、默认词库自动初始化；2026-09-05 由前端负责人按 TDD 从零重写 `frontend/`（React + TypeScript + Vite + Vitest/RTL + PWA + IndexedDB）
-- 当前任务：等待用户验收或后续迭代
+- 当前阶段：前端重写后的可靠性缺陷已修复并通过全量测试
+- 最近完成：2026-09-07 按 TDD 修复代理离线识别、学习页离线缓存、主动同步、推荐复习入口、搜索竞态、提示时限、动态状态栏主题色和备份恢复重载
+- 当前任务：等待真实浏览器与代理断网场景验收
 - 阻塞问题：无
-- 最后更新：2026-09-05
+- 最后更新：2026-09-07
 
 ## 关键文档
 
@@ -29,7 +29,7 @@
 
 - 后端启动：`cd backend && uvicorn app.main:app --reload`
 - 前端启动：`cd frontend && npm run dev`
-- 测试命令：`cd backend && python -m pytest -q`；`cd frontend && npm test`（Vitest 单次运行，100 个用例）；`cd frontend && npm run typecheck`；`cd frontend && npm run build`
+- 测试命令：`cd backend && python -m pytest -q`（62 个用例）；`cd frontend && npm test`（Vitest 单次运行，124 个用例）；`cd frontend && npm run typecheck`；`cd frontend && npm run build`
 - Docker 启动：`docker compose up --build`，当前机器未检测到 Docker CLI
 - 本地地址：后端 `http://127.0.0.1:8000`；前端 `http://127.0.0.1:5173`
 - 数据库迁移版本：`202609040006_auth_tokens`
@@ -57,18 +57,18 @@
 - `GET/POST /api/v1/backup/json`：版本化完整备份与事务恢复。
 - `GET /api/v1/vocabularies/{id}/export`：保留源字段和释义换行的词库 CSV。
 - 前端提供学习、日期、遗忘、统计、设置五个移动端入口与专攻页、词库管理二级页；`src/lib/apiClient.ts` 统一映射 `/api/v1` 并携带 Bearer Token。
-- 学习页：释义默认隐藏、点击行后在单词右侧显示；行内信息极简（无词库名/源页/掩码占位，学习/遗忘次数仅非零时小字显示）；首次学习显示“熟”、任意时刻可“遗忘”；“完成本页”二次确认后可撤销（5 分钟窗口）并可点“下一页”；离线时遗忘走同步事件、标熟/完成走 API 重放队列并乐观更新。
-- 日期页：整月日历以灰色/浅色推荐/深色完成三态渲染，展示第 k 次学习、第二/第三次完成与待完成轮次；快照弹窗支持前后会话切换；支持左右滑动与前后一天按钮切换日期。
-- 遗忘页：按服务端遗忘次数降序渲染，支持搜索（防抖）、词库/状态/最近遗忘自筛选、CSV 导出、撤销遗忘（成功后刷新）、批量勾选生成专攻页并自动跳转。
+- 学习页：释义默认隐藏、点击行后在单词右侧显示；行内信息极简（无词库名/源页/掩码占位，学习/遗忘次数仅非零时小字显示）；首次学习显示“熟”、任意时刻可“遗忘”；“完成本页”二次确认后可撤销（5 分钟窗口）并可点“下一页”；成功加载的当前页写入 IndexedDB，断网刷新时显示离线快照；离线时遗忘走同步事件、标熟/完成走 API 重放队列并乐观更新。
+- 日期页：整月日历以灰色/浅色推荐/深色完成三态渲染，展示第 k 次学习、第二/第三次完成与待完成轮次；推荐未完成轮次可进入原页面复习，复习时仅允许遗忘与完成；快照弹窗支持前后会话切换；支持左右滑动与前后一天按钮切换日期。
+- 遗忘页：按服务端遗忘次数降序渲染，支持搜索（防抖且丢弃过期响应）、词库/状态/最近遗忘自筛选、CSV 导出、撤销遗忘（成功后刷新）、批量勾选生成专攻页并自动跳转。
 - 专攻页：逐词选择记得/遗忘/熟，未选齐禁止提交，完成后返回遗忘列表。
 - 统计页：今日学习/遗忘/再次遗忘（可展开明细）/连续学习天数与累计学习、学习中、熟词、遗忘词卡片，数据全部来自服务端。
-- 设置页：页大小、推荐间隔、主题、字号、词库优先级（显示词库名）保存到服务端；主题与字号即时应用到 `<html>` 并持久化到 localStorage；主题颜色提供墨绿/靛蓝/青紫/暖橙/玫红五种预设（`data-accent` + CSS 变量，深浅色各自适配，仅存本地）；提供服务器模式登录/退出与 JSON 备份导出/导入。
-- 词库管理页：CSV 导入（展示导入统计与行级错误）、激活/停用、优先级、重命名、导出与按名称确认删除。
+- 设置页：页大小、推荐间隔、主题、字号、词库优先级（显示词库名）保存到服务端；主题与字号即时应用到 `<html>` 并持久化到 localStorage；主题颜色提供墨绿/靛蓝/青紫/暖橙/玫红五种预设（`data-accent` + CSS 变量，深浅色各自适配，仅存本地），同时更新移动端状态栏颜色；提供服务器模式登录/退出与 JSON 备份导出/导入，恢复成功后整页重载。
+- 词库管理页：CSV 导入（展示导入统计与行级错误）、激活/停用、优先级、重命名、导出与按名称确认删除；成功操作提示 4 秒后自动消失。
 - `POST /api/v1/sync/push`：幂等批量应用进度/设置事件，非法批次回滚并记录 LWW 冲突。
 - `GET /api/v1/sync/pull`：按同步记录 ID 游标拉取已处理事件和冲突。
-- 前端 IndexedDB（`wordmaster-offline`）持久化 API 重放与同步事件两类队列：遗忘为 `forget_count_delta` 增量事件；标熟、完成本页为原始 API 重放；撤销完成/撤销遗忘及专攻完成需联网。同步引擎按 FIFO 重放，网络失败保留队列并按 2 秒起步指数退避（封顶 60 秒）重试，联网时自动触发；applied/duplicate 移除，conflict 与被拒绝的重放记录到冲突列表；顶栏显示“待同步/同步冲突/离线”徽标。
-- PWA：`manifest.webmanifest` + 应用壳缓存 Service Worker（静态资源缓存优先、导航回退 `offline.html`、`/api/` 不缓存）。
-- 前端测试位置：`frontend/src/tests/`（navigation、api-client、learning、learning-offline、calendar、history、forgotten、special-learning、stats、settings、vocabularies、appearance、outbox、sync-engine、sync-status、pwa，共 16 个文件、106 个用例）。
+- 前端 IndexedDB（`wordmaster-offline`，版本 2）持久化当前学习页缓存、API 重放与同步事件两类队列：遗忘为 `forget_count_delta` 增量事件；标熟、完成本页为原始 API 重放；撤销完成/撤销遗忘及专攻完成需联网。同步引擎按 FIFO 重放，入队后主动刷新；网络失败保留队列并按 2 秒起步指数退避（封顶 60 秒）重试，联网时自动触发；applied/duplicate 移除，conflict 与被拒绝的重放记录到冲突列表；顶栏显示“待同步/同步冲突/离线”徽标。
+- PWA：`manifest.webmanifest` + 应用壳缓存 Service Worker（仅生产环境注册；静态资源缓存优先、导航回退 `offline.html`、`/api/` 不缓存）。
+- 前端测试位置：`frontend/src/tests/`（共 17 个文件、124 个用例）。
 - `POST /api/v1/auth/login`、`POST /api/v1/auth/logout`：服务器模式登录和持久化撤销 Bearer Token；本地模式免登录。
 - Compose 前端 Nginx 将 `/api/` 代理到 backend，SQLite 使用 `wordmaster_data` 卷；E2E 验收步骤位于 `tests/e2e/README.md`。
 - 应用首次启动自动导入并启用 `data/reden_vocabulary_6550.csv`；实机验证返回 6547 个有效词并可直接生成学习页。可用 `WORDMASTER_DEFAULT_VOCABULARY_PATH` 覆盖路径。
@@ -121,9 +121,11 @@
 
 2026-09-05：前端从零重写（工作目录 `C:\Users\zhan\Desktop\WordMaster-ui`，参考本地既有后端实现，未复制旧前端代码）。全程 TDD：每个阶段先写失败测试再实现。红灯记录：导航壳与 API 客户端 2 文件全挂；学习页 13 failed；日历/历史 9 failed；遗忘/专攻 13 failed；统计/设置/词库 19 failed；离线队列与同步引擎 2 文件无法解析模块。绿灯记录：`cd frontend && npm test` 结果 15 files、100 tests passed；`cd frontend && npm run typecheck` 通过；`cd frontend && npm run build` 成功（943ms，dist 含 manifest/service-worker/offline.html/图标）；`cd backend && python -m pytest -q` 回归 61 passed。期间真实缺陷由测试暴露并修复：`forgottenExportUrl` 误作对象方法导致模块导出缺失、离线判定缺少 `isNetworkError` 导出、备份导入改用 FileReader 兼容 jsdom。
 
+2026-09-07：按评审清单逐项 TDD 修复 10 个前端可靠性与体验问题。红灯分别复现代理 502/503/504 未入队、非 JSON 5xx、开发环境注册 Service Worker、离线刷新无学习页、入队不主动同步、同步期间新增记录遗漏、推荐复习无入口、完成页不能记录复习遗忘、搜索旧响应覆盖、词库提示常驻、状态栏颜色固定及备份恢复不重载。绿灯结果：`cd backend && python -m pytest -q` 62 passed；`cd frontend && npm test` 17 files、124 tests passed；类型检查与生产构建通过。
+
 ## 下一步建议
 
-1. 用 `tests/e2e/README.md` 执行真实浏览器验收（重点走通：导入→学习→完成撤销→日期历史→遗忘→专攻→统计→离线重放）。
+1. 用 `tests/e2e/README.md` 执行真实浏览器验收，重点验证代理返回 502 时的离线快照、离线入队与恢复联网后的自动同步。
 2. 在具备 Docker CLI 的环境执行 Compose smoke test，验证 Nginx `/api/` 代理与数据卷。
 3. 可选增强：离线撤销完成的重放保护、同步冲突的 UI 明细页、两设备真实同步验证。
 4. 后续如增加业务行为，继续更新本文件、`CHANGELOG.md` 和 `DECISIONS.md`。
