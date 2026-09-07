@@ -57,6 +57,14 @@ describe('离线事件队列', () => {
     unsubscribe();
   });
 
+  it('入队通知包含 enqueued 变更类型', async () => {
+    const listener = vi.fn();
+    const unsubscribe = onOutboxChange(listener);
+    await enqueueApiReplay('POST', '/study-pages/3/complete', {});
+    expect(listener).toHaveBeenCalledWith('enqueued');
+    unsubscribe();
+  });
+
   it('事件 ID 使用服务端幂等键：重复入队的相同事件保留各自条目', async () => {
     // 两个条目都携带相同的 event_id，推送时服务端按 event_id 去重并返回 duplicate
     await enqueueSyncEvent('forget', '5', { forget_count_delta: 1 }, makeSyncEvent('same-event-id').event_id);

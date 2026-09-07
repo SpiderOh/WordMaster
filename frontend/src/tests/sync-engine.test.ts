@@ -15,6 +15,7 @@ function networkError() {
 }
 
 beforeEach(async () => {
+  vi.restoreAllMocks();
   vi.clearAllMocks();
   apiClient.pullSyncEvents.mockResolvedValue({ events: [], next_cursor: 0 });
   await clearOutbox();
@@ -22,6 +23,36 @@ beforeEach(async () => {
 });
 
 describe('同步引擎', () => {
+  it('自动同步只启动一次，并在新条目入队后主动刷新', async () => {
+    const flush = vi.spyOn(syncEngine, 'flush').mockResolvedValue({ status: 'flushed', pushed: 0 });
+    syncEngine.startAutoSync();
+    syncEngine.startAutoSync();
+    await waitForMockCall(flush, 1);
+
+    await enqueueApiReplay('POST', '/study-pages/3/complete', {});
+    await waitForMockCall(flush, 2);
+    expect(flush).toHaveBeenCalledTimes(2);
+    flush.mockRestore();
+  });
+
+  it('同步进行中入队会在当前刷新结束后再次刷新', async () => {
+    let finishPull!: (value: { events: never[]; next_cursor: number }) => void;
+    apiClient.pullSyncEvents.mockReturnValue(
+      new Promise((resolve) => {
+        finishPull = resolve;
+      }),
+    );
+    apiClient.replayRequest.mockResolvedValue({});
+
+    syncEngine.startAutoSync();
+    await vi.waitFor(() => expect(apiClient.pullSyncEvents).toHaveBeenCalledTimes(1));
+    await enqueueApiReplay('POST', '/study-pages/3/complete', {});
+    finishPull({ events: [], next_cursor: 0 });
+
+    await vi.waitFor(() => expect(apiClient.replayRequest).toHaveBeenCalledTimes(1));
+    expect(await listOutbox()).toHaveLength(0);
+  });
+
   it('退避时间按指数增长且封顶 60 秒', () => {
     expect(nextBackoffSeconds(1)).toBe(2);
     expect(nextBackoffSeconds(2)).toBe(4);
@@ -142,3 +173,7 @@ describe('同步引擎', () => {
     expect(first).toHaveLength(36);
   });
 });
+
+async function waitForMockCall(mock: ReturnType<typeof vi.fn> | ReturnType<typeof vi.spyOn>, count: number): Promise<void> {
+  await vi.waitFor(() => expect(mock).toHaveBeenCalledTimes(count));
+}

@@ -16,13 +16,21 @@ const apiClient = vi.hoisted(() => ({
 
 const enqueueSyncEvent = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const enqueueApiReplay = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+const readCachedStudyPage = vi.hoisted(() => vi.fn());
+const writeCachedStudyPage = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 
 vi.mock('../lib/apiClient', () => ({
+  ApiError: class ApiError extends Error {},
   apiClient,
   isNetworkError: (error: unknown) =>
     typeof error === 'object' && error !== null && 'kind' in error && (error as { kind?: unknown }).kind === 'network',
 }));
 vi.mock('../lib/offline/outbox', () => ({ enqueueSyncEvent, enqueueApiReplay }));
+vi.mock('../lib/offline/studyPageCache', () => ({
+  CURRENT_STUDY_PAGE_CACHE_KEY: 'current',
+  readCachedStudyPage,
+  writeCachedStudyPage,
+}));
 
 import { LearningPage } from '../features/learning/LearningPage';
 
@@ -69,9 +77,34 @@ beforeEach(() => {
     vocabulary_priorities: {},
   });
   apiClient.getNextStudyPage.mockResolvedValue(makePage());
+  readCachedStudyPage.mockResolvedValue(null);
+  writeCachedStudyPage.mockResolvedValue(undefined);
 });
 
 describe('学习页离线记录', () => {
+  it('在线加载成功后缓存当前学习页', async () => {
+    render(
+      <MemoryRouter>
+        <LearningPage />
+      </MemoryRouter>,
+    );
+    await screen.findByText('panorama');
+    await waitFor(() => expect(writeCachedStudyPage).toHaveBeenCalledWith('current', makePage()));
+  });
+
+  it('网络加载失败时显示缓存页并标记离线快照', async () => {
+    apiClient.getNextStudyPage.mockRejectedValue(networkError());
+    readCachedStudyPage.mockResolvedValue(makePage());
+    render(
+      <MemoryRouter>
+        <LearningPage />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText('panorama')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('离线快照');
+    expect(screen.queryByText(/加载失败/)).not.toBeInTheDocument();
+  });
+
   it('离线时遗忘写入同步队列并乐观更新行内计数', async () => {
     apiClient.markWordForgotten.mockRejectedValue(networkError());
     const user = userEvent.setup();

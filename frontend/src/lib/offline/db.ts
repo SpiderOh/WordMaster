@@ -1,8 +1,9 @@
 // IndexedDB 底层封装：离线队列与同步游标都存放在 wordmaster-offline 库
 const DB_NAME = 'wordmaster-offline';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 export const OUTBOX_STORE = 'outbox';
 export const META_STORE = 'meta';
+export const STUDY_PAGE_STORE = 'study_pages';
 
 let openPromise: Promise<IDBDatabase> | null = null;
 
@@ -21,6 +22,9 @@ function openDatabase(): Promise<IDBDatabase> {
         }
         if (!database.objectStoreNames.contains(META_STORE)) {
           database.createObjectStore(META_STORE, { keyPath: 'key' });
+        }
+        if (!database.objectStoreNames.contains(STUDY_PAGE_STORE)) {
+          database.createObjectStore(STUDY_PAGE_STORE, { keyPath: 'key' });
         }
       };
       request.onsuccess = () => resolve(request.result);
@@ -73,6 +77,19 @@ export async function metaGet<T>(key: string): Promise<T | null> {
 
 export async function metaSet<T>(key: string, value: T): Promise<void> {
   await runTransaction<void>(META_STORE, 'readwrite', (store) => store.put({ key, value }));
+}
+
+export async function studyPagePut(item: unknown): Promise<void> {
+  await runTransaction<void>(STUDY_PAGE_STORE, 'readwrite', (store) => store.put(item as IDBValidatedObject));
+}
+
+export async function studyPageGet<T>(key: string): Promise<T | null> {
+  const record = await runTransaction<T | undefined>(STUDY_PAGE_STORE, 'readonly', (store) => store.get(key));
+  return record ?? null;
+}
+
+export async function studyPageClear(): Promise<void> {
+  await runTransaction<void>(STUDY_PAGE_STORE, 'readwrite', (store) => store.clear());
 }
 
 // IDBObjectStore.put 参数类型别名，避免 any

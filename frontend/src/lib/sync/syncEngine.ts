@@ -4,6 +4,7 @@ import type { SyncEventInput } from '../types';
 import {
   getDeviceId,
   listOutbox,
+  onOutboxChange,
   removeOutboxItem,
 } from '../offline/outbox';
 import { metaGet, metaSet } from '../offline/db';
@@ -55,6 +56,10 @@ class SyncEngine {
   private listeners = new Set<() => void>();
   private cachedConflicts: ConflictRecord[] | null = null;
   private syncing = false;
+  private flushRequested = false;
+  private autoSyncStarted = false;
+  private unsubscribeOutbox: (() => void) | null = null;
+  private onlineHandler: (() => void) | null = null;
 
   getRetryAttempt(): number {
     return this.retryAttempt;
@@ -102,14 +107,21 @@ class SyncEngine {
 
   async flush(): Promise<{ status: 'flushed' | 'offline'; pushed: number }> {
     if (this.syncing) {
-      return { status: 'offline', pushed: 0 };
+      this.flushRequested = true;
+      return { status: 'flushed', pushed: 0 };
     }
     this.syncing = true;
+    let result: { status: 'flushed' | 'offline'; pushed: number };
     try {
-      return await this.flushInternal();
+      result = await this.flushInternal();
     } finally {
       this.syncing = false;
     }
+    if (this.flushRequested) {
+      this.flushRequested = false;
+      void this.flush();
+    }
+    return result;
   }
 
   private async flushInternal(): Promise<{ status: 'flushed' | 'offline'; pushed: number }> {
@@ -224,20 +236,41 @@ class SyncEngine {
   }
 
   startAutoSync(): void {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || this.autoSyncStarted) {
       return;
     }
-    window.addEventListener('online', () => {
+    this.autoSyncStarted = true;
+    this.onlineHandler = () => {
       void this.flush();
+    };
+    window.addEventListener('online', this.onlineHandler);
+    this.unsubscribeOutbox = onOutboxChange((change) => {
+      this.notify();
+      if (change === 'enqueued') {
+        void this.flush();
+      }
     });
     void this.flush();
+  }
+
+  private stopAutoSync(): void {
+    this.unsubscribeOutbox?.();
+    this.unsubscribeOutbox = null;
+    if (this.onlineHandler !== null && typeof window !== 'undefined') {
+      window.removeEventListener('online', this.onlineHandler);
+    }
+    this.onlineHandler = null;
+    this.autoSyncStarted = false;
   }
 }
 
 export const syncEngine = new SyncEngine();
 
 export async function resetSyncEngineForTests(): Promise<void> {
+  syncEngine['stopAutoSync']();
   syncEngine['retryAttempt'] = 0;
+  syncEngine['syncing'] = false;
+  syncEngine['flushRequested'] = false;
   if (syncEngine['retryTimer'] !== null) {
     window.clearTimeout(syncEngine['retryTimer']);
     syncEngine['retryTimer'] = null;

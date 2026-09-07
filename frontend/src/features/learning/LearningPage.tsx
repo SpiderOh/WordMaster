@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError, apiClient, isNetworkError } from '../../lib/apiClient';
 import { enqueueApiReplay, enqueueSyncEvent } from '../../lib/offline/outbox';
+import {
+  CURRENT_STUDY_PAGE_CACHE_KEY,
+  readCachedStudyPage,
+  writeCachedStudyPage,
+} from '../../lib/offline/studyPageCache';
 import type { StudyPage, StudyPageWord } from '../../lib/types';
 
 type PageState =
@@ -38,10 +43,15 @@ export function LearningPage() {
     }
   }, []);
 
+  const cachePage = useCallback((page: StudyPage) => {
+    void writeCachedStudyPage(CURRENT_STUDY_PAGE_CACHE_KEY, page).catch(() => undefined);
+  }, []);
+
   const load = useCallback(async () => {
     setState({ phase: 'loading' });
     setCompletion(null);
     setRevealed(new Set());
+    setOfflineNotice(null);
     try {
       let pageSize = 15;
       try {
@@ -51,8 +61,17 @@ export function LearningPage() {
         /* 设置不可用时使用默认页大小 */
       }
       const page = await apiClient.getNextStudyPage(pageSize);
+      cachePage(page);
       setState({ phase: 'ready', page });
     } catch (error) {
+      if (isNetworkError(error)) {
+        const cachedPage = await readCachedStudyPage(CURRENT_STUDY_PAGE_CACHE_KEY).catch(() => null);
+        if (cachedPage !== null) {
+          setOfflineNotice('离线快照：显示最近一次成功加载的学习页');
+          setState({ phase: 'ready', page: cachedPage });
+          return;
+        }
+      }
       if (error instanceof ApiError && error.status === 404) {
         setState({ phase: 'empty' });
       } else if (error instanceof ApiError) {
@@ -61,7 +80,7 @@ export function LearningPage() {
         setState({ phase: 'error', message: '加载学习页失败' });
       }
     }
-  }, []);
+  }, [cachePage]);
 
   useEffect(() => {
     void load();
@@ -72,19 +91,21 @@ export function LearningPage() {
       if (current.phase !== 'ready') {
         return current;
       }
+      const page = {
+        ...current.page,
+        words: current.page.words.map((word) =>
+          word.word_id === wordId
+            ? { ...word, status: progress.status, study_count: progress.study_count, forget_count: progress.forget_count, can_mark_mastered: progress.study_count === 0 }
+            : word,
+        ),
+      };
+      cachePage(page);
       return {
         ...current,
-        page: {
-          ...current.page,
-          words: current.page.words.map((word) =>
-            word.word_id === wordId
-              ? { ...word, status: progress.status, study_count: progress.study_count, forget_count: progress.forget_count, can_mark_mastered: progress.study_count === 0 }
-              : word,
-          ),
-        },
+        page,
       };
     });
-  }, []);
+  }, [cachePage]);
 
   const handleForget = useCallback(
     async (word: StudyPageWord) => {
@@ -119,6 +140,7 @@ export function LearningPage() {
       try {
         const page = await apiClient.markWordMastered(state.page.id, word.word_id);
         setRevealed(new Set());
+        cachePage(page);
         setState({ phase: 'ready', page });
       } catch (error) {
         if (isNetworkError(error)) {
@@ -127,9 +149,11 @@ export function LearningPage() {
             if (current.phase !== 'ready') {
               return current;
             }
+            const page = { ...current.page, words: current.page.words.filter((item) => item.word_id !== word.word_id) };
+            cachePage(page);
             return {
               ...current,
-              page: { ...current.page, words: current.page.words.filter((item) => item.word_id !== word.word_id) },
+              page,
             };
           });
           setOfflineNotice('当前离线：标熟已记录，联网后自动补词');
@@ -138,7 +162,7 @@ export function LearningPage() {
         showToast(error instanceof Error ? `标熟失败：${error.message}` : '标熟失败');
       }
     },
-    [state, showToast],
+    [state, showToast, cachePage],
   );
 
   const handleConfirmComplete = useCallback(async () => {
@@ -148,21 +172,25 @@ export function LearningPage() {
     try {
       const session = await apiClient.completePage(state.page.id);
       setCompletion({ sessionId: session.id });
-      setState({ phase: 'ready', page: { ...state.page, status: 'completed' } });
+      const page = { ...state.page, status: 'completed' as const };
+      cachePage(page);
+      setState({ phase: 'ready', page });
     } catch (error) {
       if (isNetworkError(error)) {
         await enqueueApiReplay('POST', `/study-pages/${state.page.id}/complete`, {
           completed_at: new Date().toISOString(),
         });
         setCompletion({ sessionId: 0 });
-        setState({ phase: 'ready', page: { ...state.page, status: 'completed' } });
+        const page = { ...state.page, status: 'completed' as const };
+        cachePage(page);
+        setState({ phase: 'ready', page });
       } else {
         showToast(error instanceof Error ? `完成失败：${error.message}` : '完成失败');
       }
     } finally {
       setConfirming(false);
     }
-  }, [state, showToast]);
+  }, [state, showToast, cachePage]);
 
   const handleUndo = useCallback(async () => {
     if (state.phase !== 'ready' || completion === null) {
@@ -176,6 +204,7 @@ export function LearningPage() {
       await apiClient.undoPageCompletion(state.page.id, completion.sessionId);
       const page = await apiClient.getStudyPage(state.page.id);
       setCompletion(null);
+      cachePage(page);
       setState({ phase: 'ready', page });
     } catch (error) {
       setCompletion(null);
@@ -185,7 +214,7 @@ export function LearningPage() {
       }
       showToast(error instanceof Error ? `撤销失败：${error.message}` : '撤销失败');
     }
-  }, [state, completion, showToast]);
+  }, [state, completion, showToast, cachePage]);
 
   const toggleReveal = useCallback((wordId: number) => {
     setRevealed((current) => {

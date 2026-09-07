@@ -50,16 +50,18 @@ export async function getDeviceId(): Promise<string> {
   return deviceId;
 }
 
-const changeListeners = new Set<() => void>();
+export type OutboxChange = 'enqueued' | 'removed' | 'cleared';
 
-export function onOutboxChange(listener: () => void): () => void {
+const changeListeners = new Set<(change: OutboxChange) => void>();
+
+export function onOutboxChange(listener: (change: OutboxChange) => void): () => void {
   changeListeners.add(listener);
   return () => changeListeners.delete(listener);
 }
 
-function notifyChange(): void {
+function notifyChange(change: OutboxChange): void {
   for (const listener of changeListeners) {
-    listener();
+    listener(change);
   }
 }
 
@@ -80,7 +82,7 @@ export async function enqueueApiReplay(method: string, path: string, body?: unkn
     payload: { method, path, body },
   };
   await outboxPut(item);
-  notifyChange();
+  notifyChange('enqueued');
 }
 
 export async function enqueueSyncEvent(
@@ -106,7 +108,7 @@ export async function enqueueSyncEvent(
     payload: event,
   };
   await outboxPut(item);
-  notifyChange();
+  notifyChange('enqueued');
 }
 
 export async function listOutbox(): Promise<OutboxItem[]> {
@@ -116,10 +118,10 @@ export async function listOutbox(): Promise<OutboxItem[]> {
 
 export async function removeOutboxItem(id: string): Promise<void> {
   await outboxDelete(id);
-  notifyChange();
+  notifyChange('removed');
 }
 
 export async function clearOutbox(): Promise<void> {
   await outboxClear();
-  notifyChange();
+  notifyChange('cleared');
 }
