@@ -192,6 +192,24 @@ def test_forgetting_on_an_unfinished_page_saves_without_incrementing_study_count
     assert event.session_id is None
 
 
+def test_forgetting_on_a_completed_normal_page_starts_a_new_review_round(client, db_session):
+    page, _, word = create_completed_session(db_session, ["alpha"])
+
+    response = client.post(f"/api/v1/study-pages/{page.id}/words/{word.id}/forget", json={})
+
+    progress = db_session.scalar(select(WordProgress).where(WordProgress.word_id == word.id))
+    event = db_session.scalars(
+        select(WordStudyEvent)
+        .where(WordStudyEvent.event_type == "mark_forgotten")
+        .order_by(WordStudyEvent.id.desc())
+    ).first()
+    assert response.status_code == 200
+    assert progress.study_count == 1
+    assert progress.forget_count == 1
+    assert event.page_id == page.id
+    assert event.session_id is None
+
+
 def test_forgotten_words_api_filters_and_exports_csv(client, db_session):
     page, session, word = create_completed_session(db_session, ["alpha"])
     client.post(

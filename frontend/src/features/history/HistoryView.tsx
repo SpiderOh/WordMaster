@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../../lib/apiClient';
 import { addDays, formatMonthLabel, monthGrid, monthOf, todayISO } from '../../lib/calendar';
 import type { CalendarSummary, CalendarDay, DateHistory, HistoryPageSnapshot } from '../../lib/types';
@@ -207,6 +207,11 @@ export function HistoryView() {
                   <button type="button" className="btn btn--small btn--ghost" onClick={() => void openSnapshot(page.session_id as number)}>
                     查看快照
                   </button>
+                )}
+                {!page.completed_on_date && page.is_recommended && page.remaining_recommended_rounds > 0 && (
+                  <Link className="btn btn--small" to={`/review/${page.page_id}`}>
+                    开始第 {page.study_number} 次学习
+                  </Link>
                 )}
               </li>
             ))}

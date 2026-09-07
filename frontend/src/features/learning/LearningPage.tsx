@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiClient, isNetworkError } from '../../lib/apiClient';
 import { enqueueApiReplay, enqueueSyncEvent } from '../../lib/offline/outbox';
 import {
@@ -21,6 +21,10 @@ interface CompletionToast {
 }
 
 export function LearningPage() {
+  const navigate = useNavigate();
+  const { pageId } = useParams<{ pageId: string }>();
+  const reviewPageId = pageId && /^\d+$/.test(pageId) ? Number(pageId) : null;
+  const cacheKey = reviewPageId === null ? CURRENT_STUDY_PAGE_CACHE_KEY : `review:${reviewPageId}`;
   const [state, setState] = useState<PageState>({ phase: 'loading' });
   const [revealed, setRevealed] = useState<ReadonlySet<number>>(new Set());
   const [confirming, setConfirming] = useState(false);
@@ -44,8 +48,8 @@ export function LearningPage() {
   }, []);
 
   const cachePage = useCallback((page: StudyPage) => {
-    void writeCachedStudyPage(CURRENT_STUDY_PAGE_CACHE_KEY, page).catch(() => undefined);
-  }, []);
+    void writeCachedStudyPage(cacheKey, page).catch(() => undefined);
+  }, [cacheKey]);
 
   const load = useCallback(async () => {
     setState({ phase: 'loading' });
@@ -53,19 +57,24 @@ export function LearningPage() {
     setRevealed(new Set());
     setOfflineNotice(null);
     try {
-      let pageSize = 15;
-      try {
-        const settings = await apiClient.getSettings();
-        pageSize = settings.page_size;
-      } catch {
-        /* 设置不可用时使用默认页大小 */
+      let page: StudyPage;
+      if (reviewPageId !== null) {
+        page = await apiClient.getStudyPage(reviewPageId);
+      } else {
+        let pageSize = 15;
+        try {
+          const settings = await apiClient.getSettings();
+          pageSize = settings.page_size;
+        } catch {
+          /* 设置不可用时使用默认页大小 */
+        }
+        page = await apiClient.getNextStudyPage(pageSize);
       }
-      const page = await apiClient.getNextStudyPage(pageSize);
       cachePage(page);
       setState({ phase: 'ready', page });
     } catch (error) {
       if (isNetworkError(error)) {
-        const cachedPage = await readCachedStudyPage(CURRENT_STUDY_PAGE_CACHE_KEY).catch(() => null);
+        const cachedPage = await readCachedStudyPage(cacheKey).catch(() => null);
         if (cachedPage !== null) {
           setOfflineNotice('离线快照：显示最近一次成功加载的学习页');
           setState({ phase: 'ready', page: cachedPage });
@@ -80,7 +89,7 @@ export function LearningPage() {
         setState({ phase: 'error', message: '加载学习页失败' });
       }
     }
-  }, [cachePage]);
+  }, [cacheKey, cachePage, reviewPageId]);
 
   useEffect(() => {
     void load();
@@ -134,7 +143,7 @@ export function LearningPage() {
 
   const handleMaster = useCallback(
     async (word: StudyPageWord) => {
-      if (state.phase !== 'ready') {
+      if (state.phase !== 'ready' || reviewPageId !== null) {
         return;
       }
       try {
@@ -162,7 +171,7 @@ export function LearningPage() {
         showToast(error instanceof Error ? `标熟失败：${error.message}` : '标熟失败');
       }
     },
-    [state, showToast, cachePage],
+    [state, showToast, cachePage, reviewPageId],
   );
 
   const handleConfirmComplete = useCallback(async () => {
@@ -235,7 +244,9 @@ export function LearningPage() {
         {state.phase === 'ready' && (
           <span className="page-heading__meta">
             第 {state.page.page_number} 页 · 共 {state.page.words.length} 词
-            {state.page.status === 'completed' && ' · 已完成'}
+            {reviewPageId === null && state.page.status === 'completed' && ' · 已完成'}
+            {reviewPageId !== null && completion === null && ' · 推荐复习'}
+            {reviewPageId !== null && completion !== null && ' · 本轮已完成'}
           </span>
         )}
       </div>
@@ -285,7 +296,7 @@ export function LearningPage() {
           <ol className="word-list">
             {state.page.words.map((word) => {
               const isRevealed = revealed.has(word.word_id);
-              const actionable = state.page.status === 'in_progress';
+              const actionable = completion === null && (state.page.status === 'in_progress' || reviewPageId !== null);
               // 简洁模式：仅在学习/遗忘发生过后展示计数
               const metaParts: string[] = [];
               if (word.study_count > 0) {
@@ -308,7 +319,7 @@ export function LearningPage() {
                   <span className="word-row__actions">
                     {actionable && (
                       <>
-                        {word.can_mark_mastered && (
+                        {reviewPageId === null && word.can_mark_mastered && (
                           <button
                             type="button"
                             className="btn btn--small"
@@ -338,7 +349,7 @@ export function LearningPage() {
             })}
           </ol>
 
-          {state.page.status === 'in_progress' && (
+          {completion === null && (state.page.status === 'in_progress' || reviewPageId !== null) && (
             <div className="study-footer">
               <button type="button" className="btn btn--block" onClick={() => setConfirming(true)}>
                 完成本页
@@ -373,8 +384,18 @@ export function LearningPage() {
               撤销
             </button>
           )}
-          <button type="button" className="btn btn--small" onClick={() => void load()}>
-            下一页
+          <button
+            type="button"
+            className="btn btn--small"
+            onClick={() => {
+              if (reviewPageId !== null) {
+                navigate('/history');
+              } else {
+                void load();
+              }
+            }}
+          >
+            {reviewPageId !== null ? '返回日期' : '下一页'}
           </button>
         </div>
       )}

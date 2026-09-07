@@ -450,6 +450,9 @@ class ForgettingService:
                 StudyPageWord.active.is_(True),
             )
         )
-        if page is None or page.user_id != user_id or page.status != "in_progress" or link is None:
+        can_record_on_page = page is not None and (
+            page.status == "in_progress" or (page.page_type == "normal" and page.status == "completed")
+        )
+        if page is None or page.user_id != user_id or not can_record_on_page or link is None:
             raise ForgettingNotFoundError("Active study-page word not found")
         return page.id, None

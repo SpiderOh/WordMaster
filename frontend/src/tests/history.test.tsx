@@ -84,7 +84,7 @@ const snapshotFixture: HistoryPageSnapshot = {
   next_session_id: 90,
 };
 
-function renderHistory(initialEntry = '/history') {
+function renderHistory(initialEntry = '/history?date=2026-09-05') {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <HistoryView />
@@ -130,6 +130,8 @@ describe('日期历史页', () => {
     const recommendedCard = screen.getByText(/第 2 页/).closest('li') as HTMLElement;
     expect(recommendedCard).toHaveTextContent('推荐复习');
     expect(recommendedCard).toHaveTextContent('待完成 2 轮');
+    expect(within(recommendedCard).getByRole('link', { name: '开始第 2 次学习' })).toHaveAttribute('href', '/review/9');
+    expect(within(completedCard).queryByRole('link', { name: /开始第/ })).not.toBeInTheDocument();
   });
 
   it('查看快照弹窗展示单词顺序和完成前状态', async () => {

@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppSettings, StudyPage, StudyPageWord } from '../lib/types';
 
@@ -28,7 +28,12 @@ const { apiClient, ApiError } = vi.hoisted(() => {
   };
 });
 
-vi.mock('../lib/apiClient', () => ({ ApiError, apiClient }));
+vi.mock('../lib/apiClient', () => ({
+  ApiError,
+  apiClient,
+  isNetworkError: (error: unknown) =>
+    typeof error === 'object' && error !== null && 'kind' in error && (error as { kind?: unknown }).kind === 'network',
+}));
 
 import { LearningPage } from '../features/learning/LearningPage';
 
@@ -72,10 +77,13 @@ const settingsFixture: AppSettings = {
   vocabulary_priorities: {},
 };
 
-function renderLearning() {
+function renderLearning(initialEntry = '/') {
   return render(
-    <MemoryRouter>
-      <LearningPage />
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Routes>
+        <Route path="/" element={<LearningPage />} />
+        <Route path="/review/:pageId" element={<LearningPage />} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -137,6 +145,35 @@ describe('学习页', () => {
     expect(within(row).getByRole('button', { name: '遗忘' })).toBeInTheDocument();
     expect(within(row).getByText(/学 2/)).toBeInTheDocument();
     expect(within(row).queryByText(/忘 \d/)).not.toBeInTheDocument();
+  });
+
+  it('推荐复习路由加载既有页面，只允许遗忘和完成本页', async () => {
+    apiClient.getStudyPage.mockResolvedValue(
+      makePage({
+        status: 'completed',
+        words: [makeWord({ study_count: 1, status: 'learning', can_mark_mastered: false })],
+      }),
+    );
+    apiClient.completePage.mockResolvedValue({
+      id: 88,
+      page_id: 3,
+      completed_at: '2026-09-07T08:00:00Z',
+      snapshot: { page_id: 3, words: [] },
+    });
+    const user = userEvent.setup();
+    renderLearning('/review/3');
+
+    const row = await screen.findByRole('listitem');
+    expect(apiClient.getStudyPage).toHaveBeenCalledWith(3);
+    expect(apiClient.getNextStudyPage).not.toHaveBeenCalled();
+    expect(within(row).queryByRole('button', { name: '熟' })).not.toBeInTheDocument();
+    await user.click(within(row).getByRole('button', { name: '遗忘' }));
+    await waitFor(() => expect(apiClient.markWordForgotten).toHaveBeenCalledWith(3, 1));
+    await user.click(screen.getByRole('button', { name: '完成本页' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: '确认完成' }));
+    await waitFor(() => expect(apiClient.completePage).toHaveBeenCalledWith(3));
+    expect(screen.queryByRole('button', { name: '遗忘' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '完成本页' })).not.toBeInTheDocument();
   });
 
   it('标记熟后用服务端返回的页面整体替换，补入新词', async () => {

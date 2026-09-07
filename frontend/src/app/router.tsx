@@ -12,6 +12,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LearningPage />} />
+      <Route path="/review/:pageId" element={<LearningPage />} />
       <Route path="/history" element={<HistoryView />} />
       <Route path="/forgotten" element={<ForgottenView />} />
       <Route path="/special/:pageId" element={<SpecialLearningPage />} />
