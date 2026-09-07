@@ -76,6 +76,44 @@ describe('apiClient', () => {
     expect((error as ApiError).kind).toBe('network');
   });
 
+  it.each([502, 503, 504])('代理返回 %i 时按网络不可用处理', async (status) => {
+    fetchMock.mockResolvedValue(jsonResponse({ detail: 'Proxy unavailable' }, status));
+    const error = await apiClient.getTodayStats().catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      status,
+      kind: 'network',
+      message: '网络不可用，请稍后重试',
+    });
+  });
+
+  it('非 JSON 5xx 响应按网络不可用处理', async () => {
+    fetchMock.mockResolvedValue(
+      new Response('<html>upstream failed</html>', {
+        status: 500,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+    );
+    const error = await apiClient.getTodayStats().catch((caught: unknown) => caught);
+    expect(error).toMatchObject({
+      status: 500,
+      kind: 'network',
+      message: '网络不可用，请稍后重试',
+    });
+  });
+
+  it('JSON 业务 5xx 响应保留原始错误详情', async () => {
+    const detail = { code: 'study_locked', reason: '当前页面正在结算' };
+    fetchMock.mockResolvedValue(jsonResponse({ detail }, 500));
+    const error = await apiClient.getTodayStats().catch((caught: unknown) => caught);
+    expect(error).toMatchObject({
+      status: 500,
+      kind: 'http',
+      detail,
+      message: JSON.stringify(detail),
+    });
+  });
+
   it('删除词库时把确认名称作为查询参数', async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
     await apiClient.deleteVocabulary(7, '四级核心');

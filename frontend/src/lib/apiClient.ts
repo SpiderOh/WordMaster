@@ -109,10 +109,14 @@ async function send(url: string, init: RequestInit): Promise<Response> {
   }
   if (!response.ok) {
     let payload: unknown = null;
+    let hasJsonPayload = true;
     try {
       payload = await response.json();
     } catch {
-      payload = null;
+      hasJsonPayload = false;
+    }
+    if ([502, 503, 504].includes(response.status) || (response.status >= 500 && !hasJsonPayload)) {
+      throw new ApiError('网络不可用，请稍后重试', response.status, 'network', payload);
     }
     const detail =
       payload !== null && typeof payload === 'object' && 'detail' in payload
