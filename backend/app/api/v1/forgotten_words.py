@@ -45,7 +45,7 @@ def export_forgotten_words(
 ) -> Response:
     content = ForgettingService(db).export_forgotten_csv(user_id=current_user.id)
     return Response(
-        content=content,
+        content=f"\ufeff{content}",
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": 'attachment; filename="forgotten-words.csv"'},
     )

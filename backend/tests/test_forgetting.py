@@ -212,6 +212,8 @@ def test_forgetting_on_a_completed_normal_page_starts_a_new_review_round(client,
 
 def test_forgotten_words_api_filters_and_exports_csv(client, db_session):
     page, session, word = create_completed_session(db_session, ["alpha"])
+    word.meaning = "中文释义"
+    db_session.commit()
     client.post(
         f"/api/v1/study-pages/{page.id}/words/{word.id}/forget",
         json={"session_id": session.id},
@@ -229,8 +231,10 @@ def test_forgotten_words_api_filters_and_exports_csv(client, db_session):
     assert non_matching.json() == []
     assert export_response.status_code == 200
     assert export_response.headers["content-type"].startswith("text/csv")
+    assert export_response.content.startswith(b"\xef\xbb\xbf")
+    assert "中文释义" in export_response.content.decode("utf-8-sig")
     assert "word,meaning,vocabulary,status,study_count,forget_count,last_forgotten_at" in export_response.text
-    assert "alpha,alpha meaning,Deck,learning,1,1," in export_response.text
+    assert "alpha,中文释义,Deck,learning,1,1," in export_response.text
 
 
 def test_special_page_and_restore_mastered_api(client, db_session):

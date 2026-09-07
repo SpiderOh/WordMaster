@@ -112,7 +112,7 @@ def export_vocabulary(
     for word in db.scalars(select(Word).where(Word.vocabulary_id == vocabulary.id).order_by(Word.position, Word.id)):
         writer.writerow([word.original_number or "", word.word, word.meaning, word.source_page or ""])
     return Response(
-        content=output.getvalue(),
+        content=f"\ufeff{output.getvalue()}",
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="vocabulary-{vocabulary.id}.csv"'},
     )

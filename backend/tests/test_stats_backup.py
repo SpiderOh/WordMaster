@@ -198,7 +198,7 @@ def test_json_backup_restores_complete_progress_and_invalid_import_rolls_back(cl
 
 
 def test_vocabulary_csv_export_preserves_source_fields(client, db_session):
-    csv_text = 'number,word,meaning,source_page\n1,alpha,"line one\nline two",12\n'
+    csv_text = 'number,word,meaning,source_page\n1,alpha,"中文释义\n第二行",12\n'
     result = VocabularyImportService(db_session).import_csv(
         io.StringIO(csv_text), name="Deck", user_id=1, filename="deck.csv"
     )
@@ -207,5 +207,7 @@ def test_vocabulary_csv_export_preserves_source_fields(client, db_session):
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/csv")
+    assert response.content.startswith(b"\xef\xbb\xbf")
+    decoded = response.content.decode("utf-8-sig")
     assert "number,word,meaning,source_page" in response.text
-    assert '1,alpha,"line one\nline two",12' in response.text
+    assert '1,alpha,"中文释义\n第二行",12' in decoded

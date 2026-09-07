@@ -7,7 +7,7 @@
 ## 当前状态
 
 - 当前阶段：前端重写后的可靠性缺陷已修复并通过全量测试
-- 最近完成：2026-09-07 按 TDD 修复代理离线识别、学习页离线缓存、主动同步、推荐复习入口、搜索竞态、提示时限、动态状态栏主题色和备份恢复重载
+- 最近完成：2026-09-07 按 TDD 修复代理离线识别、学习页离线缓存、主动同步、推荐复习入口、搜索竞态、提示时限、动态状态栏主题色、备份恢复重载，以及 Excel 打开 CSV 中文乱码
 - 当前任务：等待真实浏览器与代理断网场景验收
 - 阻塞问题：无
 - 最后更新：2026-09-07
@@ -122,6 +122,8 @@
 2026-09-05：前端从零重写（工作目录 `C:\Users\zhan\Desktop\WordMaster-ui`，参考本地既有后端实现，未复制旧前端代码）。全程 TDD：每个阶段先写失败测试再实现。红灯记录：导航壳与 API 客户端 2 文件全挂；学习页 13 failed；日历/历史 9 failed；遗忘/专攻 13 failed；统计/设置/词库 19 failed；离线队列与同步引擎 2 文件无法解析模块。绿灯记录：`cd frontend && npm test` 结果 15 files、100 tests passed；`cd frontend && npm run typecheck` 通过；`cd frontend && npm run build` 成功（943ms，dist 含 manifest/service-worker/offline.html/图标）；`cd backend && python -m pytest -q` 回归 61 passed。期间真实缺陷由测试暴露并修复：`forgottenExportUrl` 误作对象方法导致模块导出缺失、离线判定缺少 `isNetworkError` 导出、备份导入改用 FileReader 兼容 jsdom。
 
 2026-09-07：按评审清单逐项 TDD 修复 10 个前端可靠性与体验问题。红灯分别复现代理 502/503/504 未入队、非 JSON 5xx、开发环境注册 Service Worker、离线刷新无学习页、入队不主动同步、同步期间新增记录遗漏、推荐复习无入口、完成页不能记录复习遗忘、搜索旧响应覆盖、词库提示常驻、状态栏颜色固定及备份恢复不重载。绿灯结果：`cd backend && python -m pytest -q` 62 passed；`cd frontend && npm test` 17 files、124 tests passed；类型检查与生产构建通过。
+
+2026-09-07：以失败测试确认词库 CSV 和遗忘词 CSV 均缺少 UTF-8 BOM；两个下载响应增加 BOM 后定向测试 2 passed，`cd backend && python -m pytest -q` 回归 62 passed。Excel 可直接识别中文，CSV 字段、换行与导入格式不变。
 
 ## 下一步建议
 
