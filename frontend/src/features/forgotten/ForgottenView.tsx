@@ -25,6 +25,7 @@ export function ForgottenView() {
   const [message, setMessage] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const debounceRef = useRef<number | null>(null);
+  const requestSequenceRef = useRef(0);
 
   const fetchWords = useCallback(async (filters: {
     search: string;
@@ -32,6 +33,7 @@ export function ForgottenView() {
     status: WordStatus | '';
     forgottenSince: string;
   }) => {
+    const requestSequence = ++requestSequenceRef.current;
     setLoading(true);
     try {
       const result = await apiClient.listForgottenWords({
@@ -40,13 +42,19 @@ export function ForgottenView() {
         status: filters.status === '' ? undefined : filters.status,
         forgottenSince: /^\d{4}-\d{2}-\d{2}$/.test(filters.forgottenSince) ? filters.forgottenSince : undefined,
       });
-      setWords(result);
-      setSelected(new Set());
-      setLoadError(null);
+      if (requestSequence === requestSequenceRef.current) {
+        setWords(result);
+        setSelected(new Set());
+        setLoadError(null);
+      }
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : '加载遗忘词失败');
+      if (requestSequence === requestSequenceRef.current) {
+        setLoadError(error instanceof Error ? error.message : '加载遗忘词失败');
+      }
     } finally {
-      setLoading(false);
+      if (requestSequence === requestSequenceRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 

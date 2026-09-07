@@ -4,6 +4,7 @@ import type { ImportResult, Vocabulary } from '../../lib/types';
 
 type EditState = { vocabularyId: number; name: string } | null;
 type DeleteState = { vocabulary: Vocabulary; confirm: string } | null;
+const SUCCESS_MESSAGE_DURATION_MS = 4_000;
 
 export function VocabulariesView() {
   const [vocabularies, setVocabularies] = useState<Vocabulary[]>([]);
@@ -33,6 +34,14 @@ export function VocabulariesView() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (message === null) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => setMessage(null), SUCCESS_MESSAGE_DURATION_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [message]);
 
   const handleImport = useCallback(async () => {
     const input = document.getElementById('vocabulary-file') as HTMLInputElement | null;

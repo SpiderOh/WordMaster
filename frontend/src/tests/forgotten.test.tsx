@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -90,6 +90,43 @@ describe('遗忘词入口', () => {
         forgottenSince: '2026-09-01',
       }),
     );
+  });
+
+  it('较早的搜索响应晚到时不会覆盖最新结果', async () => {
+    let resolveFirstSearch!: (words: ForgottenWord[]) => void;
+    let resolveSecondSearch!: (words: ForgottenWord[]) => void;
+    apiClient.listForgottenWords.mockImplementation((filters: { search?: string }) => {
+      if (filters.search === 'pan') {
+        return new Promise((resolve) => {
+          resolveFirstSearch = resolve;
+        });
+      }
+      if (filters.search === 'pano') {
+        return new Promise((resolve) => {
+          resolveSecondSearch = resolve;
+        });
+      }
+      return Promise.resolve(forgottenFixture);
+    });
+    renderForgotten();
+    await screen.findAllByRole('listitem');
+
+    const searchInput = screen.getByPlaceholderText('搜索单词');
+    fireEvent.change(searchInput, { target: { value: 'pan' } });
+    await waitFor(() => expect(apiClient.listForgottenWords).toHaveBeenCalledWith({ search: 'pan' }));
+    fireEvent.change(searchInput, { target: { value: 'pano' } });
+    await waitFor(() => expect(apiClient.listForgottenWords).toHaveBeenCalledWith({ search: 'pano' }));
+
+    await act(async () => {
+      resolveSecondSearch([makeWord({ word_id: 3, word: 'new-result' })]);
+    });
+    expect(await screen.findByText('new-result')).toBeInTheDocument();
+
+    await act(async () => {
+      resolveFirstSearch([makeWord({ word_id: 4, word: 'stale-result' })]);
+    });
+    expect(screen.getByText('new-result')).toBeInTheDocument();
+    expect(screen.queryByText('stale-result')).not.toBeInTheDocument();
   });
 
   it('勾选单词后可批量生成专攻页并自动跳转', async () => {

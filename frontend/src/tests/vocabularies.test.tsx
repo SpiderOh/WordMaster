@@ -1,7 +1,7 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ImportResult, Vocabulary } from '../lib/types';
 
 const apiClient = vi.hoisted(() => ({
@@ -46,6 +46,10 @@ beforeEach(() => {
     ...vocabulariesFixture[0],
     active,
   }));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('词库管理页', () => {
@@ -94,6 +98,22 @@ describe('词库管理页', () => {
     await user.type(input, '2');
     await user.click(within(rows[0]).getByRole('button', { name: '保存优先级' }));
     await waitFor(() => expect(apiClient.setVocabularyPriority).toHaveBeenCalledWith(1, 2));
+  });
+
+  it('成功提示会在短暂显示后自动消失', async () => {
+    apiClient.setVocabularyPriority.mockResolvedValue(vocabulariesFixture[0]);
+    renderVocabularies();
+    const rows = await screen.findAllByRole('listitem');
+    vi.useFakeTimers();
+    await act(async () => {
+      fireEvent.click(within(rows[0]).getByRole('button', { name: '保存优先级' }));
+    });
+    expect(screen.getByRole('status')).toHaveTextContent('优先级已保存');
+
+    await act(async () => {
+      vi.advanceTimersByTime(4_000);
+    });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('重命名词库', async () => {
