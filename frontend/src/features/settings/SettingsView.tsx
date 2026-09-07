@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ACCENT_PRESETS, applyAppearance, readStoredAppearance } from '../../lib/appearance';
 import { apiClient, clearAuthToken, getAuthToken } from '../../lib/apiClient';
 import { downloadJson } from '../../lib/download';
+import { reloadPage } from '../../lib/reloadPage';
 import type { AppSettings, FontSizePreference, ThemePreference, Vocabulary } from '../../lib/types';
 
 // jsdom 的 Blob 未实现 text()，统一用 FileReader 读取用户选择的文件
@@ -178,6 +179,7 @@ export function SettingsView() {
       const payload = JSON.parse(await readTextFile(file)) as Record<string, unknown>;
       await apiClient.importBackup(payload);
       setMessage('备份已恢复');
+      reloadPage();
     } catch (cause) {
       setFormError(cause instanceof Error ? `导入失败：${cause.message}` : '导入失败');
     }

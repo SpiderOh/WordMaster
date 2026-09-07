@@ -5,15 +5,16 @@ const APPEARANCE_STORAGE_KEY = 'wordmaster-appearance';
 export interface AccentPreset {
   id: string;
   label: string;
+  lightColor: string;
+  darkColor: string;
 }
 
-// 主题颜色预设：颜色值由 styles.css 中 data-accent 规则定义
 export const ACCENT_PRESETS: AccentPreset[] = [
-  { id: 'green', label: '墨绿' },
-  { id: 'blue', label: '靛蓝' },
-  { id: 'purple', label: '青紫' },
-  { id: 'orange', label: '暖橙' },
-  { id: 'rose', label: '玫红' },
+  { id: 'green', label: '墨绿', lightColor: '#20695a', darkColor: '#3f9d87' },
+  { id: 'blue', label: '靛蓝', lightColor: '#2f6fab', darkColor: '#6aa5e0' },
+  { id: 'purple', label: '青紫', lightColor: '#6d5bb8', darkColor: '#a794e8' },
+  { id: 'orange', label: '暖橙', lightColor: '#c2661f', darkColor: '#e89a55' },
+  { id: 'rose', label: '玫红', lightColor: '#b84a68', darkColor: '#e58aa4' },
 ];
 
 export const DEFAULT_ACCENT = 'green';
@@ -66,6 +67,14 @@ export function applyAppearance(theme: ThemePreference, fontSize: FontSizePrefer
   document.documentElement.dataset.theme = resolvedTheme;
   document.documentElement.dataset.fontSize = fontSize;
   document.documentElement.dataset.accent = resolvedAccent;
+  const accentPreset = ACCENT_PRESETS.find((preset) => preset.id === resolvedAccent) ?? ACCENT_PRESETS[0];
+  let themeColorMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (themeColorMeta === null) {
+    themeColorMeta = document.createElement('meta');
+    themeColorMeta.name = 'theme-color';
+    document.head.append(themeColorMeta);
+  }
+  themeColorMeta.content = resolvedTheme === 'dark' ? accentPreset.darkColor : accentPreset.lightColor;
   try {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,

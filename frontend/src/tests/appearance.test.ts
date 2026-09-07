@@ -3,6 +3,7 @@ import { ACCENT_PRESETS, applyAppearance, readStoredAppearance } from '../lib/ap
 
 beforeEach(() => {
   localStorage.clear();
+  document.head.innerHTML = '<meta name="theme-color" content="#20695a">';
   document.documentElement.dataset.theme = '';
   document.documentElement.dataset.fontSize = '';
   document.documentElement.dataset.accent = '';
@@ -17,8 +18,14 @@ describe('外观偏好', () => {
   it('应用主题颜色到文档根元素并持久化', () => {
     applyAppearance('light', 'medium', 'blue');
     expect(document.documentElement.dataset.accent).toBe('blue');
+    expect(document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.content).toBe('#2f6fab');
     const stored = JSON.parse(localStorage.getItem('wordmaster-appearance') as string);
     expect(stored).toMatchObject({ theme: 'light', font_size: 'medium', accent: 'blue' });
+  });
+
+  it('深色主题使用对应的状态栏主题色', () => {
+    applyAppearance('dark', 'medium', 'rose');
+    expect(document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.content).toBe('#e58aa4');
   });
 
   it('未知主题颜色回退默认绿色', () => {

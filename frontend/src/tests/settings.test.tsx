@@ -20,8 +20,10 @@ const clearAuthToken = vi.hoisted(() => vi.fn());
 vi.mock('../lib/apiClient', () => ({ apiClient, getAuthToken, clearAuthToken }));
 
 const downloadJson = vi.hoisted(() => vi.fn());
+const reloadPage = vi.hoisted(() => vi.fn());
 
 vi.mock('../lib/download', () => ({ downloadJson }));
+vi.mock('../lib/reloadPage', () => ({ reloadPage }));
 
 import { SettingsView } from '../features/settings/SettingsView';
 
@@ -163,7 +165,7 @@ describe('设置页', () => {
     await waitFor(() => expect(downloadJson).toHaveBeenCalledWith('wordmaster-backup.json', { version: 1, data: {} }));
   });
 
-  it('导入备份上传 JSON 并显示恢复结果', async () => {
+  it('导入备份上传 JSON 并在恢复后重新加载页面', async () => {
     apiClient.importBackup.mockResolvedValue({ status: 'restored' });
     const user = userEvent.setup();
     renderSettings();
@@ -171,5 +173,6 @@ describe('设置页', () => {
     await user.upload(await screen.findByLabelText('导入 JSON 备份'), backupFile);
     await waitFor(() => expect(apiClient.importBackup).toHaveBeenCalledWith({ version: 1 }));
     expect(await screen.findByText('备份已恢复')).toBeInTheDocument();
+    expect(reloadPage).toHaveBeenCalledTimes(1);
   });
 });
